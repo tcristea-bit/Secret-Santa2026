@@ -291,6 +291,114 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VISTA 2: PANNELLO ADMIN (CONFIGURAZIONE)   -->
+    <!-- ========================================== -->
+    <section id="admin-view" class="hidden space-y-6">
+
+      <!-- Barra Riepilogo & Stato Estrazione (Zero Spoiler) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-red-100 text-red-700 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Partecipanti</p>
+            <p id="stat-total" class="text-2xl font-extrabold text-slate-900">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-green-100 text-green-800 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-shield-check"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Copertura Regali</p>
+            <p id="stat-coverage" class="text-base font-extrabold text-slate-700">In attesa</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-dharmachakra"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ruote Girate</p>
+            <p id="stat-spun" class="text-2xl font-extrabold text-slate-900">0 / 0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banner Verifica Copertura 100% senza Spoiler -->
+      <div id="verification-banner" class="hidden bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3 text-green-900 shadow-xs">
+        <i class="fa-solid fa-circle-check text-green-700 text-xl"></i>
+        <div class="text-sm font-semibold" id="verification-banner-text">
+          Verifica completata: tutti i partecipanti hanno una persona assegnata e riceveranno esattamente 1 regalo.
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Colonna Sinistra: Inserimento Utenti, Estrazione & EmailJS -->
+        <div class="lg:col-span-5 space-y-6">
+
+          <!-- Card Aggiungi Singolo Collega -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-user-plus text-red-700"></i> Aggiungi Collega
+              </h3>
+              <p class="text-xs text-slate-500 mt-1">
+                Sono ammesse esclusivamente email <code class="bg-slate-100 px-1.5 py-0.5 rounded text-red-700 font-bold">@mollonoleggio.com</code>.
+              </p>
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <label for="input-name" class="block text-xs font-bold text-slate-700 mb-1">Nome e Cognome</label>
+                <input type="text" id="input-name" placeholder="Es. Mario Rossi"
+                  onkeydown="if(event.key === 'Enter'){ event.preventDefault(); document.getElementById('input-email').focus(); }"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 text-sm outline-none" />
+              </div>
+
+              <div>
+                <label for="input-email" class="block text-xs font-bold text-slate-700 mb-1">Email Aziendale (@mollonoleggio.com)</label>
+                <input type="email" id="input-email" placeholder="m.rossi@mollonoleggio.com"
+                  onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleAddParticipant(); }"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 text-sm font-mono outline-none" />
+              </div>
+
+              <div id="domain-error-box" class="hidden bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-xl flex items-center gap-2 font-medium">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span id="domain-error-msg">Email non valida.</span>
+              </div>
+
+              <button type="button" onclick="handleAddParticipant()" class="w-full py-3 px-4 rounded-xl bg-red-700 hover:bg-red-800 text-white font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-plus"></i>
+                <span>Aggiungi al Gruppo</span>
+              </button>
+            </div>
+
+            <!-- Importazione Rapida Multipla -->
+            <div class="pt-3 border-t border-slate-100">
+              <button type="button" onclick="toggleBulkImport()" class="text-xs font-bold text-slate-600 hover:text-red-700 flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-file-import"></i>
+                <span>Importa lista rapida (copia/incolla)</span>
+              </button>
+
+              <div id="bulk-import-box" class="hidden mt-3 space-y-2.5">
+                <textarea id="bulk-textarea" rows="4" placeholder="Mario Rossi, m.rossi@mollonoleggio.com&#10;Giulia Bianchi, g.bianchi@mollonoleggio.com"
+                  class="w-full p-3 rounded-xl border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-red-600 outline-none"></textarea>
+                <button type="button" onclick="handleBulkImport()" class="w-full py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition cursor-pointer">
+                  Importa Nominativi Validi
+                </button>
+              </div>
+            </div>
+          </div>
 
           <!-- Card Estrazione Segreta & Pulizia -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
@@ -477,7 +585,23 @@
     let emailJsConfig = { ...DEFAULT_EMAILJS_CONFIG };
 
     const OFFICIAL_INSTRUCTIONS = "Questo è il tuo nominativo per il secret santa, tienilo segreto. Hai un limite massimo di €15 per fare il regalo alla persona estratta. Il giorno della cena aziendale, tutti i regali verranno riposti in un angolo e ognuno si alzerà per prendere il suo. A quel punto, puoi rivelare il tuo nome oppure rimanere anonimo per sempre!";
-// ... existing code ... -->
+
+    const WHEEL_COLORS = [
+      '#B91C1C', '#14532D', '#D97706', '#1E293B',
+      '#991B1B', '#166534', '#B45309', '#334155'
+    ];
+
+    let state = {
+      participants: [],
+      drawCompleted: false
+    };
+
+    let activeParticipantPayload = null;
+    let activeTokenKey = null;
+    let currentWheelAngle = 0;
+    let isSpinning = false;
+    let soundEnabled = true;
+
     /**
      * INIZIALIZZAZIONE SICURA AL CARICAMENTO
      */
@@ -488,7 +612,31 @@
       updateAdminHeaderControls();
 
       // Verifica se l'URL contiene il parametro personale ?p=...
-// ... existing code ... -->
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('p');
+
+      if (token) {
+        const decoded = decodeParticipantPayload(token);
+        if (decoded && decoded.name && decoded.email && decoded.targetName && Array.isArray(decoded.allNames)) {
+          openParticipantWheel(decoded, token);
+          return;
+        } else {
+          showToast('Link personale non valido o danneggiato.', 'error');
+        }
+      }
+
+      // Altrimenti mostra l'accesso Admin (o il pannello se già sbloccato nella sessione)
+      if (isAdminAuthenticated()) {
+        showAdminDashboard();
+      } else {
+        requestAdminAccess();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (activeParticipantPayload && !document.getElementById('user-view').classList.contains('hidden')) {
+        drawWheel();
+      }
     });
 
     /**
