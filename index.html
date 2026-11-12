@@ -14,6 +14,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <!-- EmailJS Browser SDK v4 -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
   <script>
     tailwind.config = {
@@ -266,140 +268,25 @@
 
             <!-- Azioni Email Riepilogo ("SECRET SANTA 2026") -->
             <div class="mt-6 pt-5 border-t border-amber-200/70 flex flex-col gap-3">
+              <!-- Stato Invio Automatico EmailJS -->
+              <div id="email-auto-status" class="rounded-xl p-3.5 border text-xs sm:text-sm font-medium flex items-center justify-center gap-2.5 bg-slate-50 border-slate-200 text-slate-700">
+                <i class="fa-solid fa-spinner fa-spin text-amber-600"></i>
+                <span>Preparazione invio automatico riepilogo...</span>
+              </div>
+
               <p class="text-xs text-slate-500 font-medium">
-                Invia subito il promemoria alla tua email aziendale con oggetto <strong class="text-slate-800">"SECRET SANTA 2026"</strong>:
+                Promemoria inviato alla tua email aziendale con oggetto <strong class="text-slate-800">"SECRET SANTA 2026"</strong>:
               </p>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button type="button" id="btn-send-summary-email" onclick="sendSummaryEmail()" class="w-full py-3.5 px-4 rounded-xl bg-green-800 hover:bg-green-900 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                  <i class="fa-solid fa-envelope-circle-check text-amber-300 text-base"></i>
-                  <span>Invia Riepilogo alla mia Email</span>
+                <button type="button" id="btn-send-summary-email" onclick="sendSummaryEmail(false)" class="w-full py-3.5 px-4 rounded-xl bg-green-800 hover:bg-green-900 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                  <i class="fa-solid fa-paper-plane text-amber-300 text-base"></i>
+                  <span>Invia di nuovo riepilogo via Email</span>
                 </button>
 
                 <button type="button" onclick="copySummaryToClipboard()" class="w-full py-3.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-sm border border-slate-300 transition flex items-center justify-center gap-2 cursor-pointer">
                   <i class="fa-regular fa-copy"></i>
                   <span>Copia Riepilogo</span>
-                </button>
-              </div>
-
-              <div id="email-sent-feedback" class="hidden text-xs text-green-800 bg-green-50 border border-green-200 rounded-xl p-3 font-medium">
-                <i class="fa-solid fa-circle-check mr-1"></i> Client email aperto con destinatario la tua casella aziendale e oggetto <strong>"SECRET SANTA 2026"</strong>!
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================================== -->
-    <!-- VISTA 2: PANNELLO ADMIN                    -->
-    <!-- ========================================== -->
-    <section id="admin-view" class="hidden space-y-6">
-
-      <!-- KPI / Riepilogo Stato Estrazione (Zero Spoiler) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-red-100 text-red-700 flex items-center justify-center text-xl">
-            <i class="fa-solid fa-users"></i>
-          </div>
-          <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase">Partecipanti</p>
-            <p id="stat-total" class="text-2xl font-extrabold text-slate-900">0</p>
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-green-100 text-green-800 flex items-center justify-center text-xl">
-            <i class="fa-solid fa-gift"></i>
-          </div>
-          <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase">Copertura Regali</p>
-            <p id="stat-coverage" class="text-base font-extrabold text-slate-700">In attesa estrazione</p>
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl">
-            <i class="fa-solid fa-dharmachakra"></i>
-          </div>
-          <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase">Test / Ruote Girate</p>
-            <p id="stat-spun" class="text-2xl font-extrabold text-slate-900">0 / 0</p>
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-zinc-900 text-amber-400 flex items-center justify-center text-xl">
-            <i class="fa-solid fa-shield-halved"></i>
-          </div>
-          <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase">Dominio Bloccato</p>
-            <p class="text-sm font-bold text-slate-800 font-mono">@mollonoleggio.com</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Banner Verifica Copertura Regali (Zero Spoiler) -->
-      <div id="verification-banner" class="hidden bg-green-50 border border-green-300 rounded-2xl p-4 flex items-center gap-3 text-green-900 shadow-xs">
-        <div class="w-9 h-9 rounded-xl bg-green-700 text-white flex items-center justify-center flex-shrink-0">
-          <i class="fa-solid fa-circle-check"></i>
-        </div>
-        <p id="verification-banner-text" class="text-sm font-semibold">
-          Verifica completata: tutti i partecipanti hanno una persona assegnata e riceveranno esattamente 1 regalo.
-        </p>
-      </div>
-
-      <!-- Griglia Principale Admin -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-        <!-- Colonna Sinistra: Inserimento & Gestione Estrazione -->
-        <div class="lg:col-span-5 space-y-6">
-          <!-- Card Aggiungi Singolo (NESSUN <form> che ricarica la pagina!) -->
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2 mb-1">
-              <i class="fa-solid fa-user-plus text-red-700"></i> Aggiungi Collega
-            </h3>
-            <p class="text-xs text-slate-500 mb-4">
-              Sono ammesse esclusivamente email <code class="bg-slate-100 px-1.5 py-0.5 rounded text-red-700 font-semibold">@mollonoleggio.com</code>.
-            </p>
-
-            <div class="space-y-3">
-              <div>
-                <label for="input-name" class="block text-xs font-semibold text-slate-700 mb-1">Nome e Cognome</label>
-                <input type="text" id="input-name" placeholder="Es. Teodora Cristea"
-                  onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleAddParticipant(); }"
-                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 text-sm outline-none" />
-              </div>
-
-              <div>
-                <label for="input-email" class="block text-xs font-semibold text-slate-700 mb-1">Email Aziendale (@mollonoleggio.com)</label>
-                <input type="email" id="input-email" placeholder="t.cristea@mollonoleggio.com"
-                  onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleAddParticipant(); }"
-                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 text-sm outline-none font-mono" />
-              </div>
-
-              <div id="domain-error-box" class="hidden bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-xl flex items-start gap-2 font-medium">
-                <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
-                <span id="domain-error-msg">Dominio non valido.</span>
-              </div>
-
-              <button type="button" onclick="handleAddParticipant()" class="w-full py-3 px-4 rounded-xl bg-red-700 hover:bg-red-800 text-white font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-plus"></i>
-                <span>Aggiungi al Gruppo</span>
-              </button>
-            </div>
-
-            <!-- Importazione Multipla Rapida -->
-            <div class="mt-5 pt-4 border-t border-slate-100">
-              <button type="button" onclick="toggleBulkImport()" class="text-xs font-semibold text-slate-600 hover:text-red-700 flex items-center gap-1.5 cursor-pointer">
-                <i class="fa-solid fa-file-import"></i> Importa lista rapida (copia/incolla più colleghi)
-              </button>
-              <div id="bulk-import-box" class="hidden mt-3 space-y-2">
-                <textarea id="bulk-textarea" rows="4" placeholder="Un partecipante per riga:&#10;Marco Rossi, m.rossi@mollonoleggio.com&#10;Anna Bianchi, a.bianchi@mollonoleggio.com&#10;l.verdi@mollonoleggio.com"
-                  class="w-full p-2.5 text-xs font-mono border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-600 outline-none"></textarea>
-                <button type="button" onclick="handleBulkImport()" class="w-full py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold cursor-pointer">
-                  Importa Elenco nel Gruppo
                 </button>
               </div>
             </div>
@@ -426,6 +313,49 @@
               </button>
             </div>
           </div>
+
+          <!-- Card Configurazione EmailJS (Preconfigurata e Attiva) -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-envelope-open-text text-amber-600"></i> Configurazione EmailJS
+              </h3>
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-green-100 text-green-800">
+                <i class="fa-solid fa-circle-check"></i> Attiva
+              </span>
+            </div>
+            <p class="text-xs text-slate-500">
+              Credenziali preconfigurate per l'invio automatico reale delle email aziendali. Modificabili solo in caso di necessità.
+            </p>
+
+            <div class="space-y-2.5 pt-1">
+              <div>
+                <label for="ejs-public-key" class="block text-[11px] font-semibold text-slate-600 mb-0.5">Public Key</label>
+                <input type="text" id="ejs-public-key" value="SaQeHGdGUERZj0F8e"
+                  class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-mono bg-slate-50 focus:bg-white focus:ring-2 focus:ring-red-600 outline-none" />
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label for="ejs-service-id" class="block text-[11px] font-semibold text-slate-600 mb-0.5">Service ID</label>
+                  <input type="text" id="ejs-service-id" value="service_xs7z1h8"
+                    class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-mono bg-slate-50 focus:bg-white focus:ring-2 focus:ring-red-600 outline-none" />
+                </div>
+                <div>
+                  <label for="ejs-template-id" class="block text-[11px] font-semibold text-slate-600 mb-0.5">Template ID</label>
+                  <input type="text" id="ejs-template-id" value="template_at4hz7j"
+                    class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-mono bg-slate-50 focus:bg-white focus:ring-2 focus:ring-red-600 outline-none" />
+                </div>
+              </div>
+              <div class="flex items-center gap-2 pt-1">
+                <button type="button" onclick="saveEmailJsConfig()" class="flex-1 py-2 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold transition cursor-pointer">
+                  Salva Modifiche EmailJS
+                </button>
+                <button type="button" onclick="resetEmailJsConfig()" class="py-2 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer" title="Ripristina valori predefiniti">
+                  Ripristina
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Colonna Destra: Elenco Partecipanti, Link Personali & Area Spoiler -->
@@ -433,14 +363,31 @@
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 class="text-lg font-bold text-slate-900">Partecipanti & Link Personali</h3>
+                <h3 class="text-lg font-bold text-slate-900">Partecipanti & Invio Inviti</h3>
                 <p class="text-xs text-slate-500 mt-0.5">
-                  Dopo aver eseguito l'estrazione, invia a ciascun collega il suo link personale univoco.
+                  Dopo aver eseguito l'estrazione, invia a ciascun collega il suo link personale univoco via EmailJS o copialo.
                 </p>
               </div>
-              <span id="pairing-health-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 self-start">
-                <i class="fa-solid fa-clock"></i> Da estrarre
-              </span>
+              <div class="flex items-center gap-2 flex-wrap self-start sm:self-center">
+                <button type="button" id="btn-send-all-invites" onclick="sendAllInvitesBatch()" class="hidden px-3.5 py-2 rounded-xl bg-green-800 hover:bg-green-900 text-white font-bold text-xs shadow-sm transition inline-flex items-center gap-1.5 cursor-pointer">
+                  <i class="fa-solid fa-envelopes-bulk text-amber-300"></i>
+                  <span>Invia Inviti a Tutti</span>
+                </button>
+                <span id="pairing-health-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                  <i class="fa-solid fa-clock"></i> Da estrarre
+                </span>
+              </div>
+            </div>
+
+            <!-- Barra Avanzamento Invio Massivo EmailJS -->
+            <div id="batch-send-progress" class="hidden px-6 py-3.5 bg-green-50 border-b border-green-200">
+              <div class="flex items-center justify-between text-xs font-bold text-green-900 mb-1.5">
+                <span id="batch-send-label"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Invio inviti in corso...</span>
+                <span id="batch-send-counter">0 / 0</span>
+              </div>
+              <div class="w-full h-2 bg-green-200 rounded-full overflow-hidden">
+                <div id="batch-send-bar" class="h-full bg-green-700 transition-all duration-300" style="width: 0%"></div>
+              </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -515,78 +462,102 @@
     const ALLOWED_DOMAIN = '@mollonoleggio.com';
     const STORAGE_KEY = 'mollo_secret_santa_2026_state_v2';
     const SPUN_PREFIX = 'mollo_ss2026_spun_';
+    const EMAIL_SENT_PREFIX = 'mollo_ss2026_emailsent_';
+    const EMAILJS_STORAGE_KEY = 'mollo_ss2026_emailjs_cfg_v1';
     const ADMIN_PASSWORD = 'TuccaN3n!';
     const ADMIN_SESSION_KEY = 'mollo_ss2026_admin_unlocked_v2';
 
-    const OFFICIAL_INSTRUCTIONS = "Questo è il tuo nominativo per il Secret Santa, tienilo segreto. Hai un limite massimo di €15 per fare il regalo alla persona estratta. Il giorno della cena aziendale, tutti i regali verranno riposti in un angolo e ognuno si alzerà per prendere il suo. A quel punto, puoi rivelare il tuo nome oppure rimanere anonimo per sempre!";
-
-    // Colori festivi & Mollo Noleggio per gli spicchi della ruota
-    const WHEEL_COLORS = [
-      '#B91C1C', // Rosso Natale
-      '#14532D', // Verde Abete
-      '#D97706', // Oro Ambra Mollo
-      '#1E293B', // Antracite Mollo
-      '#991B1B', // Rosso Scuro
-      '#166534', // Verde Pino
-      '#B45309', // Bronzo Caldo
-      '#334155'  // Grigio Ardesia
-    ];
-
-    let state = {
-      participants: [], // { id, name, email, targetId, hasSpun }
-      drawCompleted: false
+    // Credenziali EmailJS preconfigurate
+    const DEFAULT_EMAILJS_CONFIG = {
+      publicKey: 'SaQeHGdGUERZj0F8e',
+      serviceId: 'service_xs7z1h8',
+      templateId: 'template_at4hz7j'
     };
 
-    // Dati del partecipante attivo nella vista Ruota (da URL ?p=... o da simulatore Admin)
-    let activeParticipantPayload = null;
-    let activeTokenKey = '';
-    let currentWheelAngle = 0;
-    let isSpinning = false;
-    let soundEnabled = true;
+    let emailJsConfig = { ...DEFAULT_EMAILJS_CONFIG };
 
+    const OFFICIAL_INSTRUCTIONS = "Questo è il tuo nominativo per il secret santa, tienilo segreto. Hai un limite massimo di €15 per fare il regalo alla persona estratta. Il giorno della cena aziendale, tutti i regali verranno riposti in un angolo e ognuno si alzerà per prendere il suo. A quel punto, puoi rivelare il tuo nome oppure rimanere anonimo per sempre!";
+// ... existing code ... -->
     /**
      * INIZIALIZZAZIONE SICURA AL CARICAMENTO
      */
     document.addEventListener('DOMContentLoaded', () => {
+      loadEmailJsConfig();
+      initEmailJsSdk();
       loadAdminState();
       updateAdminHeaderControls();
 
       // Verifica se l'URL contiene il parametro personale ?p=...
-      const urlParams = new URLSearchParams(window.location.search);
-      const encodedPayload = urlParams.get('p');
+// ... existing code ... -->
+    });
 
-      if (encodedPayload) {
-        const decoded = decodeParticipantPayload(encodedPayload);
-        if (decoded && decoded.name && decoded.email && decoded.targetName && Array.isArray(decoded.allNames)) {
-          // I link personali bypassano completamente la schermata password Admin!
-          openParticipantWheel(decoded, encodedPayload);
-          return;
-        } else {
-          showToast('Il link personale non è valido o è incompleto.', 'error');
+    /**
+     * GESTIONE SDK EMAILJS v4
+     */
+    function loadEmailJsConfig() {
+      try {
+        const raw = localStorage.getItem(EMAILJS_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.publicKey && parsed.serviceId && parsed.templateId) {
+            emailJsConfig = parsed;
+          }
         }
+      } catch {}
+
+      const pkEl = document.getElementById('ejs-public-key');
+      const sidEl = document.getElementById('ejs-service-id');
+      const tidEl = document.getElementById('ejs-template-id');
+      if (pkEl) pkEl.value = emailJsConfig.publicKey;
+      if (sidEl) sidEl.value = emailJsConfig.serviceId;
+      if (tidEl) tidEl.value = emailJsConfig.templateId;
+    }
+
+    function initEmailJsSdk() {
+      try {
+        if (typeof emailjs !== 'undefined' && emailJsConfig.publicKey) {
+          emailjs.init({ publicKey: emailJsConfig.publicKey });
+        }
+      } catch (err) {
+        console.error('Errore inizializzazione EmailJS:', err);
+      }
+    }
+
+    function saveEmailJsConfig() {
+      const pk = document.getElementById('ejs-public-key').value.trim();
+      const sid = document.getElementById('ejs-service-id').value.trim();
+      const tid = document.getElementById('ejs-template-id').value.trim();
+
+      if (!pk || !sid || !tid) {
+        showToast('Compila tutti e tre i campi EmailJS.', 'error');
+        return;
       }
 
-      // Se non c'è un link personale valido, mostra login Admin (o pannello Admin se già sbloccato)
-      requestAdminAccess();
+      emailJsConfig = { publicKey: pk, serviceId: sid, templateId: tid };
+      try {
+        localStorage.setItem(EMAILJS_STORAGE_KEY, JSON.stringify(emailJsConfig));
+      } catch {}
+      initEmailJsSdk();
+      showToast('Configurazione EmailJS aggiornata e salvata!', 'success');
+    }
 
-      window.addEventListener('resize', () => {
-        if (!document.getElementById('user-view').classList.contains('hidden')) {
-          drawWheel();
-        }
-      });
-    });
+    function resetEmailJsConfig() {
+      emailJsConfig = { ...DEFAULT_EMAILJS_CONFIG };
+      try {
+        localStorage.removeItem(EMAILJS_STORAGE_KEY);
+      } catch {}
+      loadEmailJsConfig();
+      initEmailJsSdk();
+      showToast('Credenziali EmailJS predefinite ripristinate.', 'info');
+    }
 
     /**
      * CODIFICA E DECODIFICA URL-SAFE BASE64 (SUPPORTO UTF-8 COMPLETO)
      */
     function encodeParticipantPayload(payloadObj) {
       const jsonStr = JSON.stringify(payloadObj);
-      const utf8Bytes = new TextEncoder().encode(jsonStr);
-      let binary = '';
-      for (let i = 0; i < utf8Bytes.length; i++) {
-        binary += String.fromCharCode(utf8Bytes[i]);
-      }
-      return btoa(binary)
+      const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
+      return base64
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=+$/, '');
@@ -598,12 +569,7 @@
         while (base64.length % 4) {
           base64 += '=';
         }
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) {
-          bytes[i] = binary.charCodeAt(i);
-        }
-        const jsonStr = new TextDecoder().decode(bytes);
+        const jsonStr = decodeURIComponent(escape(atob(base64)));
         return JSON.parse(jsonStr);
       } catch (e) {
         console.error('Errore decodifica payload:', e);
@@ -989,7 +955,8 @@
         name: participant.name,
         email: participant.email,
         targetName: target.name,
-        allNames: wheelNames
+        allNames: wheelNames,
+        ejs: emailJsConfig
       };
 
       const encoded = encodeParticipantPayload(payload);
@@ -1008,7 +975,22 @@
       copyTextToClipboard(url, `Link personale di ${p.name} copiato!`);
     }
 
-    function sendInviteEmail(participantId) {
+    function buildInviteEmailText(participant, personalUrl) {
+      return (
+        `Ciao ${participant.name},\n\n` +
+        `Sei stato inserito nel gruppo per il SECRET SANTA 2026 di Mollo Noleggio!\n\n` +
+        `Clicca sul tuo link personale qui sotto per far girare la ruota e scoprire in segreto a chi dovrai fare il regalo:\n` +
+        `${personalUrl}\n\n` +
+        `Ricorda:\n` +
+        `- Questo è il tuo nominativo per il secret santa, tienilo segreto.\n` +
+        `- Hai un limite massimo di €15 per fare il regalo alla persona estratta.\n` +
+        `- Il giorno della cena aziendale, tutti i regali verranno riposti in un angolo e ognuno si alzerà per prendere il suo. A quel punto, puoi rivelare il tuo nome oppure rimanere anonimo per sempre!\n\n` +
+        `Buone Feste,\n` +
+        `Team Mollo Noleggio`
+      );
+    }
+
+    function copyInviteText(participantId) {
       const p = state.participants.find(item => item.id === participantId);
       if (!p) return;
       const url = buildPersonalUrlForParticipant(p);
@@ -1016,22 +998,119 @@
         showToast('Esegui prima l\'estrazione segreta.', 'error');
         return;
       }
+      const fullInvite = `Destinatario: ${p.email}\nOggetto: SECRET SANTA 2026\n\n` + buildInviteEmailText(p, url);
+      copyTextToClipboard(fullInvite, `Testo invito per ${p.name} copiato!`);
+    }
 
-      const subject = 'SECRET SANTA 2026 - Il tuo link personale Mollo Noleggio';
-      const body =
-        `Ciao ${p.name},\n\n` +
-        `Sei stato inserito nel gruppo per il SECRET SANTA 2026 di Mollo Noleggio!\n\n` +
-        `Clicca sul tuo link personale qui sotto per far girare la ruota e scoprire in segreto a chi dovrai fare il regalo:\n` +
-        `${url}\n\n` +
-        `Ricorda:\n` +
-        `- Tieni segreto il nominativo estratto.\n` +
-        `- Budget massimo: €15.\n` +
-        `- Il giorno della cena aziendale tutti i regali verranno riposti in un angolo e ognuno prenderà il suo.\n\n` +
-        `Buone Feste!`;
+    async function sendInviteEmail(participantId, silentToast = false) {
+      const p = state.participants.find(item => item.id === participantId);
+      if (!p) return false;
+      const url = buildPersonalUrlForParticipant(p);
+      if (!url) {
+        if (!silentToast) showToast('Esegui prima l\'estrazione segreta.', 'error');
+        return false;
+      }
 
-      const mailto = `mailto:${encodeURIComponent(p.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      window.location.href = mailto;
-      showToast(`Apertura email invito per ${p.name}...`, 'info');
+      if (typeof emailjs === 'undefined') {
+        if (!silentToast) showToast('Libreria EmailJS non caricata. Controlla la connessione internet.', 'error');
+        return false;
+      }
+
+      const btn = document.getElementById(`btn-invite-${p.id}`);
+      const originalBtnHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Invio...</span>';
+      }
+
+      const templateParams = {
+        to_email: p.email,
+        to_name: p.name,
+        subject: 'SECRET SANTA 2026',
+        assigned_name: 'Apri il link per girare la ruota',
+        personal_link: url,
+        message: buildInviteEmailText(p, url)
+      };
+
+      try {
+        initEmailJsSdk();
+        await emailjs.send(emailJsConfig.serviceId, emailJsConfig.templateId, templateParams);
+        p.inviteSent = true;
+        saveAdminState();
+        renderAdminDashboard();
+        if (!silentToast) {
+          showToast(`Invito inviato via EmailJS a ${p.email}!`, 'success');
+        }
+        return true;
+      } catch (err) {
+        console.error('Errore invio invito EmailJS:', err);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalBtnHtml;
+        }
+        const errDetail = (err && (err.text || err.message)) ? (err.text || err.message) : 'Errore di rete o configurazione';
+        if (!silentToast) {
+          showToast(`Errore invio a ${p.email}: ${errDetail}`, 'error');
+        }
+        return false;
+      }
+    }
+
+    let isBatchSending = false;
+
+    function sendAllInvitesBatch() {
+      if (isBatchSending) return;
+      if (!state.drawCompleted || !verifyAllParticipantsCovered()) {
+        showToast('Esegui prima l\'estrazione segreta.', 'error');
+        return;
+      }
+
+      openConfirmModal(
+        'Inviare l\'email di invito a tutti i partecipanti?',
+        `Verranno inviate automaticamente ${state.participants.length} email tramite EmailJS con oggetto "SECRET SANTA 2026" contenenti ciascuna il link personale della ruota.`,
+        async () => {
+          isBatchSending = true;
+          const btnAll = document.getElementById('btn-send-all-invites');
+          const progressBox = document.getElementById('batch-send-progress');
+          const progressLabel = document.getElementById('batch-send-label');
+          const progressCounter = document.getElementById('batch-send-counter');
+          const progressBar = document.getElementById('batch-send-bar');
+
+          if (btnAll) btnAll.disabled = true;
+          progressBox.classList.remove('hidden');
+
+          const total = state.participants.length;
+          let successCount = 0;
+          let failCount = 0;
+
+          for (let i = 0; i < total; i++) {
+            const participant = state.participants[i];
+            progressLabel.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Invio a ${escapeHtml(participant.name)} (${escapeHtml(participant.email)})...`;
+            progressCounter.textContent = `${i + 1} / ${total}`;
+            progressBar.style.width = `${Math.round(((i + 1) / total) * 100)}%`;
+
+            const ok = await sendInviteEmail(participant.id, true);
+            if (ok) successCount++;
+            else failCount++;
+
+            // Breve pausa tra un invio e l'altro per rispettare i limiti di frequenza API
+            if (i < total - 1) {
+              await new Promise(r => setTimeout(r, 450));
+            }
+          }
+
+          isBatchSending = false;
+          if (btnAll) btnAll.disabled = false;
+
+          if (failCount === 0) {
+            progressLabel.innerHTML = `<i class="fa-solid fa-circle-check text-green-700 mr-1.5"></i> Tutti i ${successCount} inviti sono stati inviati con successo!`;
+            showToast(`Completato! Inviate ${successCount} email su ${total}.`, 'success');
+          } else {
+            progressLabel.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-700 mr-1.5"></i> Inviate ${successCount} email, ${failCount} non riuscite.`;
+            showToast(`Invio completato con ${failCount} errori. Puoi ritentare sui singoli nominativi.`, 'error');
+          }
+        }
+      );
     }
 
     /**
@@ -1049,12 +1128,14 @@
       const healthBadge = document.getElementById('pairing-health-badge');
       const verifBanner = document.getElementById('verification-banner');
       const verifText = document.getElementById('verification-banner-text');
+      const btnSendAll = document.getElementById('btn-send-all-invites');
 
       if (validPairings) {
         statCov.textContent = '100% Garantita';
         statCov.className = 'text-base font-extrabold text-green-700';
         healthBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Estrazione pronta';
-        healthBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 self-start';
+        healthBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800';
+        if (btnSendAll) btnSendAll.classList.remove('hidden');
 
         verifBanner.classList.remove('hidden');
         verifText.textContent = `Verifica completata: tutti i ${total} partecipanti hanno una persona assegnata e riceveranno esattamente 1 regalo.`;
@@ -1062,7 +1143,8 @@
         statCov.textContent = total < 3 ? 'Min. 3 utenti' : 'Da estrarre';
         statCov.className = 'text-base font-extrabold text-amber-700';
         healthBadge.innerHTML = '<i class="fa-solid fa-clock"></i> Da estrarre';
-        healthBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 self-start';
+        healthBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800';
+        if (btnSendAll) btnSendAll.classList.add('hidden');
         verifBanner.classList.add('hidden');
       }
 
@@ -1102,19 +1184,26 @@
             ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">In attesa estrazione</span>`
             : p.hasSpun
               ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800"><i class="fa-solid fa-check"></i> Ha girato</span>`
-              : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800"><i class="fa-regular fa-clock"></i> Pronto</span>`;
+              : p.inviteSent
+                ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800"><i class="fa-solid fa-envelope-circle-check"></i> Mail inviata</span>`
+                : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800"><i class="fa-regular fa-clock"></i> Pronto</span>`;
 
           const linkActionsHtml = validPairings
             ? `
+              <button type="button" id="btn-invite-${p.id}" onclick="sendInviteEmail('${p.id}')" title="Invia Invito Reale via EmailJS"
+                class="px-2.5 py-1.5 rounded-lg bg-green-800 hover:bg-green-900 text-white text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-paper-plane text-amber-300"></i>
+                <span>Invia Invito Email</span>
+              </button>
               <button type="button" onclick="copyPersonalLink('${p.id}')" title="Copia Link Personale"
                 class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-700 text-white text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
                 <i class="fa-solid fa-link text-amber-400"></i>
                 <span>Copia Link</span>
               </button>
-              <button type="button" onclick="sendInviteEmail('${p.id}')" title="Invia Email Invito"
-                class="px-2.5 py-1.5 rounded-lg bg-green-800 hover:bg-green-900 text-white text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
-                <i class="fa-solid fa-paper-plane text-amber-300"></i>
-                <span class="hidden sm:inline">Invia Mail</span>
+              <button type="button" onclick="copyInviteText('${p.id}')" title="Copia Testo Invito Completo"
+                class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-regular fa-copy"></i>
+                <span class="hidden sm:inline">Copia Testo Invito</span>
               </button>
             `
             : `<span class="text-xs text-slate-400 italic mr-2">Estrai prima</span>`;
@@ -1224,13 +1313,18 @@
       activeTokenKey = SPUN_PREFIX + tokenStr.slice(0, 32);
       activeParticipantPayload._localId = localParticipantId;
 
+      // Se il payload contiene configurazione EmailJS aggiornata dall'Admin, applicala
+      if (payload.ejs && payload.ejs.publicKey && payload.ejs.serviceId && payload.ejs.templateId) {
+        emailJsConfig = { ...payload.ejs };
+        initEmailJsSdk();
+      }
+
       document.getElementById('admin-login-view').classList.add('hidden');
       document.getElementById('admin-view').classList.add('hidden');
       document.getElementById('user-view').classList.remove('hidden');
 
       document.getElementById('user-greeting-name').textContent = `Ciao, ${payload.name}!`;
       document.getElementById('user-greeting-email').textContent = payload.email;
-      document.getElementById('email-sent-feedback').classList.add('hidden');
 
       const alreadySpun = checkIfParticipantSpun();
       const statusBadge = document.getElementById('user-status-badge');
@@ -1248,6 +1342,16 @@
         spinArea.classList.add('hidden');
         resultCard.classList.remove('hidden');
         document.getElementById('extracted-target-name').textContent = payload.targetName;
+
+        const alreadySentEmail = checkIfSummaryEmailSent();
+        const autoStatusBox = document.getElementById('email-auto-status');
+        if (alreadySentEmail) {
+          autoStatusBox.className = 'rounded-xl p-3.5 border text-xs sm:text-sm font-medium flex items-center justify-center gap-2.5 bg-green-50 border-green-200 text-green-800';
+          autoStatusBox.innerHTML = `<i class="fa-solid fa-circle-check text-green-700"></i><span>Riepilogo già inviato con successo a <strong>${escapeHtml(payload.email)}</strong> con oggetto <strong>SECRET SANTA 2026</strong>!</span>`;
+        } else {
+          autoStatusBox.className = 'rounded-xl p-3.5 border text-xs sm:text-sm font-medium flex items-center justify-center gap-2.5 bg-amber-50 border-amber-200 text-amber-900';
+          autoStatusBox.innerHTML = `<i class="fa-solid fa-envelope text-amber-700"></i><span>Clicca qui sotto per ricevere il riepilogo su <strong>${escapeHtml(payload.email)}</strong>.</span>`;
+        }
       } else {
         statusBadge.innerHTML = '<i class="fa-solid fa-gift mr-1"></i> Pronto per l\'estrazione';
         statusBadge.className = 'self-start sm:self-center px-3 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300';
@@ -1267,6 +1371,20 @@
       } catch {
         return false;
       }
+    }
+
+    function checkIfSummaryEmailSent() {
+      try {
+        return localStorage.getItem(activeTokenKey.replace(SPUN_PREFIX, EMAIL_SENT_PREFIX)) === 'true';
+      } catch {
+        return false;
+      }
+    }
+
+    function markSummaryEmailSent() {
+      try {
+        localStorage.setItem(activeTokenKey.replace(SPUN_PREFIX, EMAIL_SENT_PREFIX), 'true');
+      } catch {}
     }
 
     function markParticipantSpun() {
@@ -1424,10 +1542,13 @@
 
       document.getElementById('extracted-target-name').textContent = activeParticipantPayload.targetName;
       document.getElementById('result-card').classList.remove('hidden');
+
+      // Invio automatico immediato del riepilogo via EmailJS
+      sendSummaryEmail(true);
     }
 
     /**
-     * INVIO RIEPILOGO EMAIL CON OGGETTO ESATTO "SECRET SANTA 2026"
+     * INVIO RIEPILOGO EMAIL CON OGGETTO ESATTO "SECRET SANTA 2026" VIA EMAILJS v4
      */
     function buildSummaryEmailText() {
       return (
@@ -1440,15 +1561,64 @@
       );
     }
 
-    function sendSummaryEmail() {
+    async function sendSummaryEmail(isAutomatic = false) {
       if (!activeParticipantPayload) return;
-      const subject = 'SECRET SANTA 2026';
-      const body = buildSummaryEmailText();
-      const mailtoUrl = `mailto:${encodeURIComponent(activeParticipantPayload.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-      window.location.href = mailtoUrl;
-      document.getElementById('email-sent-feedback').classList.remove('hidden');
-      showToast('Apertura client email con oggetto "SECRET SANTA 2026"...', 'success');
+      const autoStatusBox = document.getElementById('email-auto-status');
+      const resendBtn = document.getElementById('btn-send-summary-email');
+      const userEmail = activeParticipantPayload.email;
+
+      autoStatusBox.className = 'rounded-xl p-3.5 border text-xs sm:text-sm font-medium flex items-center justify-center gap-2.5 bg-amber-50 border-amber-200 text-amber-900';
+      autoStatusBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-700"></i><span>Invio riepilogo a <strong>${escapeHtml(userEmail)}</strong> in corso...</span>`;
+
+      if (resendBtn) {
+        resendBtn.disabled = true;
+        resendBtn.classList.add('opacity-60', 'cursor-not-allowed');
+      }
+
+      if (typeof emailjs === 'undefined') {
+        autoStatusBox.className = 'rounded-xl p-3.5 border text-xs sm:text-sm font-medium flex flex-col items-center gap-1.5 bg-red-50 border-red-200 text-red-800';
+        autoStatusBox.innerHTML = `<span><i class="fa-solid fa-circle-exclamation mr-1"></i> Errore: libreria EmailJS non caricata. Usa il tasto <strong>"Copia Riepilogo"</strong> o ritenta.</span>`;
+        if (resendBtn) {
+          resendBtn.disabled = false;
+          resendBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+        }
+        return;
+      }
+
+      const templateParams = {
+        to_email: userEmail,
+        to_name: activeParticipantPayload.name,
+        subject: 'SECRET SANTA 2026',
+        assigned_name: activeParticipantPayload.targetName,
+        message: buildSummaryEmailText()
+      };
+
+      try {
+        initEmailJsSdk();
+        await emailjs.send(emailJsConfig.serviceId, emailJsConfig.templateId, templateParams);
+        markSummaryEmailSent();
+
+        autoStatusBox.className = 'rounded-xl p-3.5 border text-xs sm:text-sm font-medium flex items-center justify-center gap-2.5 bg-green-50 border-green-300 text-green-900';
+        autoStatusBox.innerHTML = `<i class="fa-solid fa-circle-check text-green-700 text-base"></i><span>Riepilogo inviato con successo a <strong>${escapeHtml(userEmail)}</strong> con oggetto <strong>SECRET SANTA 2026</strong>!</span>`;
+        showToast(`Email riepilogo inviata a ${userEmail}!`, 'success');
+      } catch (err) {
+        console.error('Errore invio EmailJS riepilogo:', err);
+        const detail = (err && (err.text || err.message)) ? (err.text || err.message) : 'Verifica connessione o parametri template EmailJS';
+        autoStatusBox.className = 'rounded-xl p-3.5 border text-xs sm:text-sm font-medium flex flex-col items-center gap-1 bg-red-50 border-red-200 text-red-800';
+        autoStatusBox.innerHTML = `
+          <div><i class="fa-solid fa-circle-xmark mr-1"></i> Invio automatico non riuscito (${escapeHtml(detail)}).</div>
+          <div class="text-[11px] text-red-700">Premi <strong>"Invia di nuovo riepilogo via Email"</strong> per ritentare oppure copia il testo qui sotto.</div>
+        `;
+        if (!isAutomatic) {
+          showToast(`Errore invio email: ${detail}`, 'error');
+        }
+      } finally {
+        if (resendBtn) {
+          resendBtn.disabled = false;
+          resendBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+        }
+      }
     }
 
     function copySummaryToClipboard() {
