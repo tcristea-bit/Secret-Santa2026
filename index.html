@@ -137,6 +137,15 @@
           <i class="fa-solid fa-user-secret text-amber-400"></i>
           <label for="preview-user-select" class="text-zinc-300 hidden sm:inline text-xs">Testa Ruota:</label>
           <select id="preview-user-select" onchange="handleSimulatorSelect(this.value)" class="bg-zinc-800 text-white font-medium focus:outline-none cursor-pointer text-xs">
+            <option value="">-- Pannello Admin --</option>
+          </select>
+        </div>
+
+        <button type="button" id="btn-back-admin" onclick="showAdminDashboard()" class="hidden bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer text-xs">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Torna ad Admin</span>
+        </button>
+
         <button type="button" id="btn-switch-admin" onclick="requestAdminAccess(true)" class="bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer text-xs">
           <i class="fa-solid fa-lock"></i>
           <span>Area Admin</span>
@@ -556,6 +565,11 @@
             </button>
 
             <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+              <button type="button" onclick="runAdminSystemCheck()" class="w-full py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-stethoscope text-amber-700"></i>
+                <span>Verifica Funzioni & Ripristina Test Spin</span>
+              </button>
+
               <button type="button" onclick="confirmResetAll()" class="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-700 border border-slate-200 hover:border-red-200 font-semibold text-xs transition flex items-center justify-center gap-2 cursor-pointer">
                 <i class="fa-solid fa-trash-can"></i>
                 <span>Svuota / Reset Tutto (Post-Natale)</span>
@@ -1211,10 +1225,12 @@
             <div class="font-mono text-slate-500">${escapeHtml(adm.email)}</div>
           </div>
           <div class="flex items-center gap-1.5">
-            <button type="button" onclick="sendCoAdminInviteEmail('${adm.id}')" title="Invia credenziali via EmailJS" class="px-2.5 py-1.5 rounded-lg bg-green-800 hover:bg-green-900 text-white font-semibold cursor-pointer">
-              <i class="fa-solid fa-paper-plane mr-1"></i>Invia Accesso
+            <button type="button" onclick="sendCoAdminInviteEmail('${adm.id}')" title="Invia credenziali via EmailJS"
+              class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-700 text-white font-semibold cursor-pointer">
+              <i class="fa-solid fa-paper-plane text-amber-300 mr-1"></i>Invia
             </button>
-            <button type="button" onclick="removeCoAdmin('${adm.id}')" title="Rimuovi" class="p-1.5 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 cursor-pointer">
+            <button type="button" onclick="removeCoAdmin('${adm.id}')" title="Rimuovi Co-Admin"
+              class="p-1.5 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 cursor-pointer">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </div>
@@ -1254,26 +1270,34 @@
       }
     }
 
-    function updateAdminHeaderControls() {
+    function updateAdminHeaderControls(inUserPreview = false) {
       const authed = isAdminAuthenticated();
       const simBox = document.getElementById('admin-simulator-box');
       const lockBtn = document.getElementById('btn-lock-admin');
       const switchBtn = document.getElementById('btn-switch-admin');
+      const backAdminBtn = document.getElementById('btn-back-admin');
 
       if (authed) {
         simBox.classList.remove('hidden');
         lockBtn.classList.remove('hidden');
-        switchBtn.innerHTML = '<i class="fa-solid fa-sliders"></i><span>Pannello Admin</span>';
+        // Quando sei già dentro l'Area Admin, nasconde il pulsante di accesso in alto
+        switchBtn.classList.add('hidden');
+        if (inUserPreview) {
+          backAdminBtn.classList.remove('hidden');
+        } else {
+          backAdminBtn.classList.add('hidden');
+        }
       } else {
         simBox.classList.add('hidden');
         lockBtn.classList.add('hidden');
+        backAdminBtn.classList.add('hidden');
+        switchBtn.classList.remove('hidden');
         switchBtn.innerHTML = '<i class="fa-solid fa-lock"></i><span>Area Admin</span>';
       }
     }
 
     function requestAdminAccess(fromUserClick = false) {
       if (isAdminAuthenticated()) {
-        // Sblocca sempre il ritorno al pannello Admin anche se il selettore simulatore era su un utente
         const simSelect = document.getElementById('preview-user-select');
         if (simSelect) simSelect.value = '';
         showAdminDashboard();
@@ -1281,6 +1305,7 @@
           switchAdminSubTab('group');
         }
       } else {
+        updateAdminHeaderControls(false);
         document.getElementById('user-view').classList.add('hidden');
         document.getElementById('admin-view').classList.add('hidden');
         document.getElementById('admin-login-view').classList.remove('hidden');
@@ -1438,7 +1463,10 @@
         requestAdminAccess();
         return;
       }
-      document.getElementById('preview-user-select').value = '';
+      isSimulationMode = false;
+      const simSelect = document.getElementById('preview-user-select');
+      if (simSelect) simSelect.value = '';
+      updateAdminHeaderControls(false);
       document.getElementById('admin-login-view').classList.add('hidden');
       document.getElementById('user-view').classList.add('hidden');
       document.getElementById('admin-view').classList.remove('hidden');
@@ -2040,8 +2068,10 @@
         });
       }
 
-      // Aggiorna lista spoiler se aperta
-      renderSpoilerList();
+      // Aggiorna l'area spoiler se attualmente aperta
+      if (!document.getElementById('spoiler-content').classList.contains('hidden')) {
+        renderSpoilerList();
+      }
     }
 
     function verifyAllParticipantsCovered() {
@@ -2050,6 +2080,7 @@
       const receivers = new Set();
       for (const p of state.participants) {
         if (!p.targetId || p.targetId === p.id) return false;
+        if (!state.participants.some(t => t.id === p.targetId)) return false;
         receivers.add(p.targetId);
       }
       return receivers.size === n;
@@ -2071,8 +2102,8 @@
       }
 
       openConfirmModal(
-        'Vuoi davvero visualizzare gli abbinamenti?',
-        'Stai per svelare chi fa il regalo a chi. Conferma solo se hai necessità di un controllo tecnico di emergenza.',
+        'Confermi di voler vedere gli abbinamenti?',
+        'Stai per visualizzare chi regala a chi. Se preferisci mantenere la sorpresa anche per te, premi Annulla.',
         () => {
           renderSpoilerList();
           content.classList.remove('hidden');
@@ -2082,21 +2113,68 @@
     }
 
     function renderSpoilerList() {
-      const listEl = document.getElementById('spoiler-list');
-      listEl.innerHTML = '';
-      if (!state.drawCompleted) return;
-
+      const list = document.getElementById('spoiler-list');
+      list.innerHTML = '';
       state.participants.forEach(p => {
         const target = state.participants.find(t => t.id === p.targetId);
         const card = document.createElement('div');
-        card.className = 'p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs';
+        card.className = 'p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2';
         card.innerHTML = `
           <span class="font-bold text-slate-800 truncate">${escapeHtml(p.name)}</span>
-          <i class="fa-solid fa-arrow-right text-red-600 flex-shrink-0"></i>
-          <span class="font-extrabold text-green-800 truncate">${escapeHtml(target ? target.name : '?')}</span>
+          <i class="fa-solid fa-arrow-right text-red-600 text-xs flex-shrink-0"></i>
+          <span class="font-bold text-green-800 truncate">${target ? escapeHtml(target.name) : '---'}</span>
         `;
-        listEl.appendChild(card);
+        list.appendChild(card);
       });
+    }
+
+    function runAdminSystemCheck() {
+      // 1. Ripristina eventuali chiavi EmailJS se vuote
+      if (!emailJsConfig.publicKey || !emailJsConfig.serviceId || !emailJsConfig.templateId) {
+        emailJsConfig = { ...DEFAULT_EMAILJS_CONFIG };
+        saveEmailJsConfig();
+      }
+      initEmailJsSdk();
+
+      // 2. Pulisce i flag locali dei test spin così puoi ritestare tutte le ruote nel simulatore
+      try {
+        Object.keys(localStorage).forEach(k => {
+          if (k.startsWith(SPUN_PREFIX) || k.startsWith(EMAIL_SENT_PREFIX)) {
+            localStorage.removeItem(k);
+          }
+        });
+      } catch {}
+
+      state.participants.forEach(p => {
+        p.hasSpun = false;
+      });
+      saveAdminState();
+      renderAdminDashboard();
+
+      const total = state.participants.length;
+      const coverageOk = total >= 3 && verifyAllParticipantsCovered();
+      const ejsOk = Boolean(emailJsConfig.publicKey && emailJsConfig.serviceId && emailJsConfig.templateId);
+
+      showToast(
+        `Diagnostica OK • EmailJS: ${ejsOk ? 'Attivo' : 'Da verificare'} • Partecipanti: ${total} • Copertura: ${coverageOk ? '100%' : 'Da estrarre'} • Test spin azzerati!`,
+        'success'
+      );
+    }
+
+    function resetCurrentSimulatedSpin() {
+      if (!isSimulationMode || !activeParticipantPayload) return;
+      try {
+        localStorage.removeItem(activeTokenKey);
+        localStorage.removeItem(activeTokenKey.replace(SPUN_PREFIX, EMAIL_SENT_PREFIX));
+      } catch {}
+      const localP = state.participants.find(p => p.id === activeParticipantPayload._localId);
+      if (localP) {
+        localP.hasSpun = false;
+        saveAdminState();
+      }
+      const token = activeTokenKey.replace(SPUN_PREFIX, '');
+      openParticipantWheel(activeParticipantPayload, token, activeParticipantPayload._localId, true);
+      showToast(`Spin di test ripristinato per ${activeParticipantPayload.name}.`, 'info');
     }
 
     function handleSimulatorSelect(participantId) {
@@ -2107,20 +2185,26 @@
       const p = state.participants.find(item => item.id === participantId);
       if (!p) return;
       const url = buildPersonalUrlForParticipant(p);
-      if (!url) return;
+      if (!url) {
+        showToast('Esegui prima l\'estrazione segreta.', 'error');
+        return;
+      }
       const token = new URL(url).searchParams.get('p');
       const decoded = decodeParticipantPayload(token);
       if (decoded) {
-        openParticipantWheel(decoded, token, p.id);
+        openParticipantWheel(decoded, token, p.id, true);
       }
     }
 
     /**
      * VISTA RUOTA PARTECIPANTE & ANIMAZIONE
      */
-    function openParticipantWheel(payload, tokenStr, localParticipantId = null) {
+    function openParticipantWheel(payload, tokenStr, localParticipantId = null, isSim = false) {
       activeParticipantPayload = payload;
-      activeTokenKey = SPUN_PREFIX + tokenStr.slice(0, 32);
+      isSimulationMode = Boolean(isSim);
+      // Usa un prefisso separato per i test Admin così non intacca lo stato reale
+      const prefix = isSimulationMode ? (SPUN_PREFIX + 'sim_') : SPUN_PREFIX;
+      activeTokenKey = prefix + tokenStr.slice(0, 32);
       activeParticipantPayload._localId = localParticipantId;
 
       // Se il payload contiene configurazione EmailJS aggiornata dall'Admin, applicala
@@ -2129,9 +2213,15 @@
         initEmailJsSdk();
       }
 
+      updateAdminHeaderControls(isSimulationMode);
       document.getElementById('admin-login-view').classList.add('hidden');
       document.getElementById('admin-view').classList.add('hidden');
       document.getElementById('user-view').classList.remove('hidden');
+
+      const simResetBar = document.getElementById('admin-test-reset-bar');
+      if (simResetBar) {
+        simResetBar.classList.toggle('hidden', !isSimulationMode);
+      }
 
       document.getElementById('user-greeting-name').textContent = `Ciao, ${payload.name}!`;
       document.getElementById('user-greeting-email').textContent = payload.email;
@@ -2202,8 +2292,8 @@
         localStorage.setItem(activeTokenKey, 'true');
       } catch {}
 
-      // Se l'utente sta girando nello stesso browser dell'Admin, aggiorna anche lo stato in tabella
-      if (activeParticipantPayload) {
+      // Se è un utente reale (non simulazione Admin), aggiorna anche lo stato in tabella
+      if (!isSimulationMode && activeParticipantPayload) {
         const localP = state.participants.find(
           p => p.id === activeParticipantPayload._localId || p.email === activeParticipantPayload.email
         );
