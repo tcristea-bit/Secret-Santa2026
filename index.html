@@ -54,6 +54,36 @@
     .btn-spin-glow {
       animation: pulseGlow 2.2s infinite;
     }
+    /* Animazione Fiocchi di Neve Natalizi */
+    #snowfall-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 35;
+      overflow: hidden;
+    }
+    .snowflake-item {
+      position: absolute;
+      top: -10%;
+      color: #ffffff;
+      text-shadow: 0 2px 6px rgba(127, 29, 29, 0.35), 0 0 8px rgba(245, 158, 11, 0.45);
+      user-select: none;
+      will-change: transform;
+      animation-name: snowFallSway;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+    @keyframes snowFallSway {
+      0% {
+        transform: translate3d(0, -10vh, 0) rotate(0deg);
+      }
+      50% {
+        transform: translate3d(24px, 50vh, 0) rotate(180deg);
+      }
+      100% {
+        transform: translate3d(-16px, 112vh, 0) rotate(360deg);
+      }
+    }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
@@ -61,6 +91,9 @@
   </style>
 </head>
 <body class="text-slate-800 antialiased flex flex-col">
+
+  <!-- Layer Animato Fiocchi di Neve Natalizi -->
+  <div id="snowfall-layer" aria-hidden="true"></div>
 
   <!-- Contenitore Notifiche Toast (Mai usare alert() o confirm()) -->
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
@@ -104,11 +137,7 @@
           <i class="fa-solid fa-user-secret text-amber-400"></i>
           <label for="preview-user-select" class="text-zinc-300 hidden sm:inline text-xs">Testa Ruota:</label>
           <select id="preview-user-select" onchange="handleSimulatorSelect(this.value)" class="bg-zinc-800 text-white font-medium focus:outline-none cursor-pointer text-xs">
-            <option value="">-- Pannello Admin --</option>
-          </select>
-        </div>
-
-        <button type="button" id="btn-switch-admin" onclick="requestAdminAccess()" class="bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer text-xs">
+        <button type="button" id="btn-switch-admin" onclick="requestAdminAccess(true)" class="bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer text-xs">
           <i class="fa-solid fa-lock"></i>
           <span>Area Admin</span>
         </button>
@@ -116,6 +145,10 @@
         <button type="button" id="btn-lock-admin" onclick="lockAdminSession()" title="Blocca Pannello Admin" class="hidden bg-zinc-800 hover:bg-zinc-700 text-amber-300 px-2.5 py-1.5 rounded-lg border border-zinc-700 transition flex items-center gap-1.5 cursor-pointer text-xs font-medium">
           <i class="fa-solid fa-right-from-bracket"></i>
           <span>Esci Admin</span>
+        </button>
+
+        <button type="button" id="btn-snow-toggle" onclick="toggleSnowfall()" title="Attiva/Disattiva Neve" class="bg-zinc-800 hover:bg-zinc-700 text-sky-300 px-2.5 py-1.5 rounded-lg border border-zinc-700 transition cursor-pointer text-xs">
+          <i id="snow-icon" class="fa-solid fa-snowflake"></i>
         </button>
 
         <button type="button" id="btn-sound-toggle" onclick="toggleSound()" title="Attiva/Disattiva Suoni" class="bg-zinc-800 hover:bg-zinc-700 text-amber-400 px-2.5 py-1.5 rounded-lg border border-zinc-700 transition cursor-pointer text-xs">
@@ -149,20 +182,26 @@
     <section id="admin-login-view" class="hidden max-w-md mx-auto my-4">
       <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
         <div class="bg-gradient-to-r from-zinc-900 to-zinc-800 px-6 py-6 text-center text-white">
-          <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-2xl mx-auto mb-3 shadow-inner">
+          <div id="login-admin-avatar" class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-2xl mx-auto mb-3 shadow-inner">
             <i class="fa-solid fa-shield-halved"></i>
           </div>
           <h2 class="text-xl font-extrabold tracking-tight">Area Riservata Admin</h2>
-          <p class="text-xs text-zinc-300 mt-1">
+          <p id="login-admin-subtitle" class="text-xs text-zinc-300 mt-1">
             Inserisci la password amministratore per gestire partecipanti ed estrazione Secret Santa 2026.
           </p>
         </div>
 
-        <div class="p-6 sm:p-8 space-y-4">
+        <!-- Modulo Login Standard -->
+        <div id="admin-login-form-box" class="p-6 sm:p-8 space-y-4">
           <div>
-            <label for="admin-password-input" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-              Password Amministratore
-            </label>
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="admin-password-input" class="block text-xs font-bold uppercase tracking-wider text-slate-600">
+                Password Amministratore
+              </label>
+              <button type="button" onclick="openForgotPasswordBox()" class="text-xs font-semibold text-red-700 hover:text-red-800 hover:underline cursor-pointer">
+                Password dimenticata?
+              </button>
+            </div>
             <div class="relative">
               <input type="password" id="admin-password-input" placeholder="Inserisci password..." autocomplete="current-password"
                 onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleAdminLogin(); }"
@@ -188,108 +227,161 @@
             Sei un partecipante? Apri direttamente il link personale ricevuto via email aziendale: non è richiesta alcuna password.
           </p>
         </div>
+
+        <!-- Modulo Recupero / Reset Password Dimenticata -->
+        <div id="admin-forgot-box" class="hidden p-6 sm:p-8 space-y-4 bg-slate-50/60">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-key text-amber-600"></i> Recupero Password Admin
+            </h3>
+            <button type="button" onclick="closeForgotPasswordBox()" class="text-xs font-semibold text-slate-500 hover:text-slate-800 cursor-pointer">
+              <i class="fa-solid fa-arrow-left mr-1"></i> Torna al login
+            </button>
+          </div>
+
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Inserisci l'email aziendale di un amministratore abilitato (<code class="bg-white px-1 py-0.5 rounded border border-slate-200">@mollonoleggio.com</code>) per ricevere un <strong>codice di verifica</strong> via EmailJS, oppure ripristina la password iniziale.
+          </p>
+
+          <div>
+            <label for="forgot-admin-email" class="block text-xs font-bold text-slate-700 mb-1">Email Amministratore</label>
+            <input type="email" id="forgot-admin-email" placeholder="nome.cognome@mollonoleggio.com"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-red-600 text-sm font-mono outline-none" />
+          </div>
+
+          <button type="button" id="btn-send-reset-code" onclick="sendAdminResetCode()" class="w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-paper-plane text-amber-300"></i>
+            <span>Invia Codice di Reset via Email</span>
+          </button>
+
+          <div id="reset-code-verify-step" class="hidden pt-3 border-t border-slate-200 space-y-3">
+            <div>
+              <label for="reset-code-input" class="block text-xs font-bold text-slate-700 mb-1">Codice ricevuto via email (6 cifre)</label>
+              <input type="text" id="reset-code-input" maxlength="6" placeholder="Es. 482910"
+                class="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-sm font-mono tracking-widest text-center outline-none" />
+            </div>
+            <div>
+              <label for="reset-new-password" class="block text-xs font-bold text-slate-700 mb-1">Nuova Password Admin</label>
+              <input type="password" id="reset-new-password" placeholder="Minimo 6 caratteri..."
+                class="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-sm font-mono outline-none" />
+            </div>
+            <button type="button" onclick="confirmAdminPasswordReset()" class="w-full py-3 px-4 rounded-xl bg-green-800 hover:bg-green-900 text-white font-bold text-xs shadow-md transition cursor-pointer">
+              Imposta Nuova Password & Accedi
+            </button>
+          </div>
+
+          <div class="pt-3 border-t border-slate-200 text-center">
+            <button type="button" onclick="resetAdminToDefaultPassword()" class="text-[11px] font-semibold text-slate-500 hover:text-red-700 underline cursor-pointer">
+              Ripristina password iniziale predefinita (TuccaN3n!)
+            </button>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- ========================================== -->
-    <!-- VISTA 1: RUOTA SECRET SANTA (PARTECIPANTE) -->
+    <!-- VISTA 1: RUOTA DEL PARTECIPANTE            -->
     <!-- ========================================== -->
     <section id="user-view" class="hidden max-w-2xl mx-auto">
-      <div class="bg-white rounded-3xl shadow-xl border border-amber-100 overflow-hidden">
-        <!-- Intestazione Benvenuto -->
-        <div class="bg-gradient-to-r from-amber-50 to-red-50 px-6 py-5 border-b border-amber-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+        <!-- Intestazione Utente -->
+        <div class="bg-gradient-to-r from-red-50 via-amber-50 to-green-50 px-6 py-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <span class="text-xs font-bold uppercase tracking-wider text-red-700">Partecipante Mollo Noleggio</span>
-            <h2 id="user-greeting-name" class="text-xl sm:text-2xl font-bold text-slate-900">Ciao!</h2>
-            <p id="user-greeting-email" class="text-xs sm:text-sm text-slate-500 font-mono"></p>
+            <p class="text-xs font-bold uppercase tracking-wider text-red-700">Partecipante Secret Santa</p>
+            <h2 id="user-greeting-name" class="text-xl sm:text-2xl font-extrabold text-slate-900">Ciao!</h2>
+            <p id="user-greeting-email" class="text-xs text-slate-500 font-mono"></p>
           </div>
-          <div id="user-status-badge" class="self-start sm:self-center px-3 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+          <span id="user-status-badge" class="self-start sm:self-center px-3 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
             <i class="fa-solid fa-gift mr-1"></i> Pronto per l'estrazione
-          </div>
+          </span>
         </div>
 
-        <!-- Corpo Ruota -->
-        <div class="p-6 sm:p-8 flex flex-col items-center">
-          <p id="wheel-instruction-top" class="text-center text-slate-600 text-sm sm:text-base mb-6 max-w-md">
+        <!-- Area Ruota -->
+        <div class="p-6 sm:p-8 flex flex-col items-center text-center">
+          <p id="wheel-instruction-top" class="text-sm sm:text-base text-slate-600 max-w-md mb-6">
             Premi il pulsante qui sotto per far girare la ruota e scoprire chi sarà il destinatario segreto del tuo regalo!
           </p>
 
-          <!-- Contenitore Canvas Ruota -->
-          <div class="relative w-full max-w-[360px] aspect-square flex items-center justify-center my-2">
-            <!-- Puntatore / Freccia in alto -->
-            <div class="absolute -top-4 left-1/2 -translate-x-1/2 z-20 drop-shadow-md">
-              <svg width="42" height="46" viewBox="0 0 42 46" fill="none">
-                <path d="M21 46L3.5 13C1.2 8.2 4.6 2 10 2H32C37.4 2 40.8 8.2 38.5 13L21 46Z" fill="#D97706" stroke="#FFFFFF" stroke-width="3"/>
-              </svg>
+          <!-- Wrapper Ruota con Puntatore -->
+          <div class="relative w-full max-w-[340px] sm:max-w-[390px] aspect-square flex items-center justify-center my-2">
+            <!-- Puntatore Superiore Fisso -->
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 drop-shadow-md">
+              <div class="w-0 h-0 border-l-[16px] border-l-transparent border-r-[16px] border-r-transparent border-t-[28px] border-t-amber-500"></div>
             </div>
 
             <!-- Canvas Ruota -->
             <canvas id="wheel-canvas" class="w-full h-full rounded-full gold-border bg-white"></canvas>
 
-            <!-- Mozzo Centrale Decorativo -->
-            <div class="absolute w-14 h-14 rounded-full bg-gradient-to-br from-zinc-900 to-red-900 border-4 border-amber-400 shadow-lg flex items-center justify-center text-amber-300 z-10 pointer-events-none">
-              <i class="fa-solid fa-sleigh text-lg"></i>
+            <!-- Mozzo Centrale -->
+            <div class="absolute w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-zinc-900 border-4 border-amber-400 shadow-lg flex items-center justify-center text-amber-400 text-lg sm:text-xl z-10 pointer-events-none">
+              <i class="fa-solid fa-sleigh"></i>
             </div>
           </div>
 
           <!-- Pulsante Gira la Ruota -->
-          <div id="spin-action-area" class="mt-8 w-full flex flex-col items-center">
-            <button type="button" id="btn-spin" onclick="startWheelSpin()" class="btn-spin-glow w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-red-700 via-red-600 to-red-700 hover:from-red-800 hover:to-red-700 text-white font-extrabold text-lg tracking-wide shadow-xl transition transform active:scale-95 flex items-center justify-center gap-3 cursor-pointer">
-              <i class="fa-solid fa-dharmachakra text-amber-300 text-xl"></i>
-              <span>GIRA LA RUOTA</span>
+          <div id="spin-action-area" class="mt-8 w-full max-w-xs">
+            <button type="button" id="btn-spin" onclick="startWheelSpin()" class="btn-spin-glow w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-red-700 via-red-600 to-amber-600 hover:from-red-800 hover:to-amber-700 text-white font-extrabold text-lg tracking-wide shadow-xl transition transform active:scale-95 flex items-center justify-center gap-3 cursor-pointer">
+              <i class="fa-solid fa-dharmachakra fa-spin" style="--fa-animation-duration: 8s;"></i>
+              <span>GIRA LA RUOTA!</span>
             </button>
-            <p class="text-xs text-slate-400 mt-3 text-center">
-              <i class="fa-solid fa-lock mr-1"></i> Estrazione singola: una volta girata, la ruota memorizzerà il tuo abbinamento.
-            </p>
           </div>
 
-          <!-- BOX RISULTATO ESTRAZIONE -->
-          <div id="result-card" class="hidden mt-8 w-full bg-gradient-to-b from-amber-50/90 to-white border-2 border-amber-400 rounded-2xl p-6 shadow-inner text-center transition-all">
-            <div class="inline-flex items-center gap-1.5 bg-green-800 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-3">
-              <i class="fa-solid fa-check-circle text-amber-300"></i> Abbinamento Estratto
+          <!-- Riquadro Risultato Segreto (Visibile dopo lo spin) -->
+          <div id="result-card" class="hidden mt-8 w-full bg-gradient-to-b from-amber-50 to-white border-2 border-amber-400 rounded-2xl p-6 shadow-lg text-center space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold uppercase tracking-wider">
+              <i class="fa-solid fa-user-secret"></i> Destinatario Segreto Assegnato
             </div>
 
-            <p class="text-sm text-slate-500 font-medium">Dovrai fare il regalo a:</p>
-            <div id="extracted-target-name" class="my-2 font-serif text-3xl sm:text-4xl font-extrabold text-red-700 bg-white py-3.5 px-4 rounded-xl border border-amber-200 shadow-sm">
-              <!-- Nominativo estratto -->
+            <div class="py-3 px-4 bg-white rounded-xl border border-amber-200 shadow-inner">
+              <p class="text-xs text-slate-400 uppercase font-semibold tracking-widest mb-1">Devi fare il regalo a:</p>
+              <h3 id="extracted-target-name" class="font-serif text-2xl sm:text-4xl font-extrabold text-red-800 tracking-tight">
+                ---
+              </h3>
             </div>
 
-            <!-- TESTO ESATTO DELLE ISTRUZIONI -->
-            <div class="mt-5 bg-white p-5 rounded-xl border border-slate-200 text-left shadow-sm">
-              <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-xl bg-red-100 text-red-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <i class="fa-solid fa-scroll"></i>
-                </div>
-                <p id="official-instructions-text" class="text-slate-700 text-sm sm:text-base leading-relaxed font-medium">
-                  Questo è il tuo nominativo per il Secret Santa, tienilo segreto. Hai un limite massimo di €15 per fare il regalo alla persona estratta. Il giorno della cena aziendale, tutti i regali verranno riposti in un angolo e ognuno si alzerà per prendere il suo. A quel punto, puoi rivelare il tuo nome oppure rimanere anonimo per sempre!
-                </p>
-              </div>
+            <!-- Testo Esatto delle Istruzioni Richieste -->
+            <div class="bg-red-900/5 border border-red-900/15 rounded-xl p-4 text-left text-sm sm:text-base text-slate-800 leading-relaxed font-medium">
+              <i class="fa-solid fa-scroll text-red-700 mr-1.5"></i>
+              <span id="secret-instructions-text">
+                Questo è il tuo nominativo per il secret santa, tienilo segreto. Hai un limite massimo di €15 per fare il regalo alla persona estratta. Il giorno della cena aziendale, tutti i regali verranno riposti in un angolo e ognuno si alzerà per prendere il suo. A quel punto, puoi rivelare il tuo nome oppure rimanere anonimo per sempre!
+              </span>
             </div>
 
-            <!-- Azioni Email Riepilogo ("SECRET SANTA 2026") -->
-            <div class="mt-6 pt-5 border-t border-amber-200/70 flex flex-col gap-3">
-              <!-- Stato Invio Automatico EmailJS -->
-              <div id="email-auto-status" class="rounded-xl p-3.5 border text-xs sm:text-sm font-medium flex items-center justify-center gap-2.5 bg-slate-50 border-slate-200 text-slate-700">
-                <i class="fa-solid fa-spinner fa-spin text-amber-600"></i>
-                <span>Preparazione invio automatico riepilogo...</span>
-              </div>
-
-              <p class="text-xs text-slate-500 font-medium">
-                Promemoria inviato alla tua email aziendale con oggetto <strong class="text-slate-800">"SECRET SANTA 2026"</strong>:
+            <!-- Box Ironico Suggerimenti Regali -->
+            <div class="bg-amber-50/90 border border-amber-300 rounded-xl p-4 text-center space-y-2.5">
+              <p class="text-xs sm:text-sm text-amber-950 italic font-medium">
+                <i class="fa-solid fa-face-grin-wink text-amber-600 mr-1.5"></i>
+                "Bruttino da parte tua fartelo suggerire, ma se sei in crisi posso darti una mano senza dirlo a nessuno."
               </p>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button type="button" id="btn-send-summary-email" onclick="sendSummaryEmail(false)" class="w-full py-3.5 px-4 rounded-xl bg-green-800 hover:bg-green-900 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                  <i class="fa-solid fa-paper-plane text-amber-300 text-base"></i>
-                  <span>Invia di nuovo riepilogo via Email</span>
-                </button>
-
-                <button type="button" onclick="copySummaryToClipboard()" class="w-full py-3.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-sm border border-slate-300 transition flex items-center justify-center gap-2 cursor-pointer">
-                  <i class="fa-regular fa-copy"></i>
-                  <span>Copia Riepilogo</span>
-                </button>
-              </div>
+              <a href="https://www.amazon.it/s?k=regali+buffi+secret+santa&adgrpid=201820787687&hvadid=822627229847&hvdev=c&hvexpln=0&hvlocphy=9202866&hvnetw=g&hvocijid=16968412586809109831--&hvqmt=b&hvrand=16968412586809109831&hvtargid=kwd-2651760728112&hydadcr=29060_2614860_360618&mcid=b50c27c1654d3d5f91204883cfe9f342&tag=slhyin-21&ref=pd_sl_6iyqglp30a_b"
+                 target="_blank" rel="noopener noreferrer"
+                 class="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-amber-500 hover:bg-amber-600 text-zinc-950 font-extrabold text-xs sm:text-sm shadow-sm transition cursor-pointer">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>Suggerimenti Regali</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-75"></i>
+              </a>
             </div>
+
+            <!-- Stato Invio Automatico EmailJS -->
+            <div id="email-auto-status" class="rounded-xl p-3.5 border text-xs sm:text-sm font-medium flex items-center justify-center gap-2.5 bg-slate-50 border-slate-200 text-slate-700">
+              <i class="fa-solid fa-spinner fa-spin text-amber-600"></i>
+              <span>Invio automatico del riepilogo alla tua email aziendale in corso...</span>
+            </div>
+
+            <!-- Pulsanti Riepilogo Email ("SECRET SANTA 2026") -->
+            <div class="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+              <button type="button" id="btn-send-summary-email" onclick="sendSummaryEmail(false)" class="flex-1 py-3.5 px-5 rounded-xl bg-green-800 hover:bg-green-900 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Invia di nuovo riepilogo via Email</span>
+              </button>
+              <button type="button" onclick="copySummaryToClipboard()" class="py-3.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-sm border border-slate-300 transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-regular fa-copy"></i>
+                <span>Copia Riepilogo</span>
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400">
+              Oggetto email: <strong>SECRET SANTA 2026</strong> • Conserva il promemoria fino alla cena aziendale!
+            </p>
           </div>
         </div>
       </div>
@@ -299,6 +391,36 @@
     <!-- VISTA 2: PANNELLO ADMIN (CONFIGURAZIONE)   -->
     <!-- ========================================== -->
     <section id="admin-view" class="hidden space-y-6">
+
+      <!-- Barra Profilo Admin & Navigazione Schede Admin -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div id="admin-header-avatar" class="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-700 to-amber-600 text-white flex items-center justify-center text-xl shadow-sm flex-shrink-0">
+            <i class="fa-solid fa-user-tie"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 id="admin-header-name" class="text-base sm:text-lg font-extrabold text-slate-900">Amministratore Mollo Noleggio</h2>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300">Admin</span>
+            </div>
+            <p id="admin-header-role" class="text-xs text-slate-500">Organizzatore Secret Santa 2026</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl self-start md:self-center">
+          <button type="button" id="tab-admin-group" onclick="switchAdminSubTab('group')" class="px-3.5 py-2 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-users text-red-700"></i>
+            <span>Gruppo & Estrazione</span>
+          </button>
+          <button type="button" id="tab-admin-settings" onclick="switchAdminSubTab('settings')" class="px-3.5 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-user-gear text-amber-600"></i>
+            <span>Profilo, Password & Co-Admin</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- SOTTO-VISTA ADMIN A: GRUPPO & ESTRAZIONE -->
+      <div id="admin-subview-group" class="space-y-6">
 
       <!-- Barra Riepilogo & Stato Estrazione (Zero Spoiler) -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -403,10 +525,10 @@
           <!-- Card Estrazione Segreta & Pulizia -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
             <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2 mb-1">
-              <i class="fa-solid fa-shuffle text-green-700"></i> Estrazione Segreta
+              <i class="fa-solid fa-shuffle text-green-700"></i> Estrazione Segreta (Derangement)
             </h3>
             <p class="text-xs text-slate-500">
-              Servono almeno <strong>3 partecipanti</strong>. L'algoritmo genera un ciclo chiuso garantito: nessuno pesca sé stesso e tutti ricevono 1 regalo.
+              Servono almeno <strong>3 partecipanti</strong>. L'algoritmo a permutazione casuale completa garantisce la massima casualità: nessuno pesca sé stesso e tutti ricevono 1 regalo.
             </p>
 
             <button type="button" onclick="executeSecretDraw()" class="w-full py-3.5 px-4 rounded-xl bg-green-800 hover:bg-green-900 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
@@ -551,6 +673,137 @@
 
         </div>
       </div>
+      </div>
+
+      <!-- SOTTO-VISTA ADMIN B: PROFILO ADMIN, CAMBIO PASSWORD & CO-ADMIN -->
+      <div id="admin-subview-settings" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Colonna Sinistra: Personalizza Profilo & Cambio Password -->
+        <div class="lg:col-span-6 space-y-6">
+          <!-- Card Personalizzazione Profilo Admin -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-id-card text-red-700"></i> Personalizza Profilo Admin
+              </h3>
+              <p class="text-xs text-slate-500 mt-1">
+                Personalizza il nome visualizzato, il ruolo e l'icona del tuo profilo amministratore.
+              </p>
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <label for="profile-admin-name" class="block text-xs font-bold text-slate-700 mb-1">Nome Visualizzato</label>
+                <input type="text" id="profile-admin-name" placeholder="Es. Teodora Cristea"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 text-sm outline-none" />
+              </div>
+
+              <div>
+                <label for="profile-admin-role" class="block text-xs font-bold text-slate-700 mb-1">Ruolo / Titolo</label>
+                <input type="text" id="profile-admin-role" placeholder="Es. Organizzatore Secret Santa 2026"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 text-sm outline-none" />
+              </div>
+
+              <div>
+                <label for="profile-admin-email" class="block text-xs font-bold text-slate-700 mb-1">Email Admin Principale (per recupero password)</label>
+                <input type="email" id="profile-admin-email" placeholder="t.cristea@mollonoleggio.com"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 text-sm font-mono outline-none" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Scegli Icona Avatar</label>
+                <div id="avatar-picker-grid" class="flex flex-wrap gap-2">
+                  <button type="button" onclick="selectAdminAvatar('fa-user-tie')" data-avatar="fa-user-tie" class="avatar-opt w-10 h-10 rounded-xl border-2 border-red-600 bg-red-50 text-red-700 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-user-tie"></i></button>
+                  <button type="button" onclick="selectAdminAvatar('fa-santa-hat')" data-avatar="fa-santa-hat" class="avatar-opt w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-sleigh"></i></button>
+                  <button type="button" onclick="selectAdminAvatar('fa-crown')" data-avatar="fa-crown" class="avatar-opt w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-crown"></i></button>
+                  <button type="button" onclick="selectAdminAvatar('fa-gift')" data-avatar="fa-gift" class="avatar-opt w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-gift"></i></button>
+                  <button type="button" onclick="selectAdminAvatar('fa-star')" data-avatar="fa-star" class="avatar-opt w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-star"></i></button>
+                </div>
+              </div>
+
+              <button type="button" onclick="saveAdminProfileSettings()" class="w-full py-3 px-4 rounded-xl bg-red-700 hover:bg-red-800 text-white font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span>Salva Profilo Admin</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card Cambio Password Admin -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-key text-amber-600"></i> Cambia Password Admin
+              </h3>
+              <p class="text-xs text-slate-500 mt-1">
+                Aggiorna la password richiesta per accedere all'Area Admin.
+              </p>
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <label for="pwd-current" class="block text-xs font-bold text-slate-700 mb-1">Password Attuale</label>
+                <input type="password" id="pwd-current" placeholder="Inserisci password attuale..."
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 text-sm font-mono outline-none" />
+              </div>
+              <div>
+                <label for="pwd-new" class="block text-xs font-bold text-slate-700 mb-1">Nuova Password</label>
+                <input type="password" id="pwd-new" placeholder="Minimo 6 caratteri..."
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 text-sm font-mono outline-none" />
+              </div>
+              <div>
+                <label for="pwd-confirm" class="block text-xs font-bold text-slate-700 mb-1">Conferma Nuova Password</label>
+                <input type="password" id="pwd-confirm" placeholder="Ripeti nuova password..."
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 text-sm font-mono outline-none" />
+              </div>
+
+              <button type="button" onclick="handleChangeAdminPassword()" class="w-full py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-shield-check text-amber-300"></i>
+                <span>Aggiorna Password</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonna Destra: Gestione Co-Amministratori -->
+        <div class="lg:col-span-6 space-y-6">
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-user-shield text-green-700"></i> Aggiungi un Co-Admin
+              </h3>
+              <p class="text-xs text-slate-500 mt-1">
+                Abilita altri colleghi <code class="bg-slate-100 px-1 py-0.5 rounded text-red-700 font-bold">@mollonoleggio.com</code> a gestire il pannello Admin e a ricevere il codice di reset password.
+              </p>
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <label for="coadmin-name" class="block text-xs font-bold text-slate-700 mb-1">Nome e Cognome Co-Admin</label>
+                <input type="text" id="coadmin-name" placeholder="Es. Marco Bianchi"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 text-sm outline-none" />
+              </div>
+              <div>
+                <label for="coadmin-email" class="block text-xs font-bold text-slate-700 mb-1">Email Aziendale (@mollonoleggio.com)</label>
+                <input type="email" id="coadmin-email" placeholder="m.bianchi@mollonoleggio.com"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 text-sm font-mono outline-none" />
+              </div>
+
+              <button type="button" onclick="handleAddCoAdmin()" class="w-full py-3 px-4 rounded-xl bg-green-800 hover:bg-green-900 text-white font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-user-plus text-amber-300"></i>
+                <span>Aggiungi Amministratore</span>
+              </button>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Amministratori Abilitati</h4>
+              <div id="coadmins-list" class="space-y-2.5">
+                <!-- Lista Co-Admin generata dinamicamente -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </section>
 
   </main>
@@ -572,8 +825,22 @@
     const SPUN_PREFIX = 'mollo_ss2026_spun_';
     const EMAIL_SENT_PREFIX = 'mollo_ss2026_emailsent_';
     const EMAILJS_STORAGE_KEY = 'mollo_ss2026_emailjs_cfg_v1';
-    const ADMIN_PASSWORD = 'TuccaN3n!';
+    const DEFAULT_ADMIN_PASSWORD = 'TuccaN3n!';
+    const ADMIN_SETTINGS_KEY = 'mollo_ss2026_admin_settings_v1';
     const ADMIN_SESSION_KEY = 'mollo_ss2026_admin_unlocked_v2';
+
+    let adminSettings = {
+      password: DEFAULT_ADMIN_PASSWORD,
+      profileName: 'Amministratore Mollo Noleggio',
+      profileRole: 'Organizzatore Secret Santa 2026',
+      profileEmail: 't.cristea@mollonoleggio.com',
+      profileAvatar: 'fa-user-tie',
+      coAdmins: []
+    };
+
+    let pendingPasswordResetCode = null;
+    let pendingPasswordResetEmail = null;
+    let snowEnabled = true;
 
     // Credenziali EmailJS preconfigurate
     const DEFAULT_EMAILJS_CONFIG = {
@@ -606,10 +873,13 @@
      * INIZIALIZZAZIONE SICURA AL CARICAMENTO
      */
     document.addEventListener('DOMContentLoaded', () => {
+      loadAdminSettings();
+      initSnowfall();
       loadEmailJsConfig();
       initEmailJsSdk();
       loadAdminState();
       updateAdminHeaderControls();
+      applyAdminProfileUI();
 
       // Verifica se l'URL contiene il parametro personale ?p=...
       const urlParams = new URLSearchParams(window.location.search);
@@ -640,93 +910,280 @@
     });
 
     /**
-     * GESTIONE SDK EMAILJS v4
+     * FIOCCHI DI NEVE NATALIZI ANIMATI
      */
-    function loadEmailJsConfig() {
+    function initSnowfall() {
+      const layer = document.getElementById('snowfall-layer');
+      if (!layer) return;
+      layer.innerHTML = '';
+      const flakes = ['❄', '❅', '❆', '✻', '✼'];
+      const count = 28;
+      for (let i = 0; i < count; i++) {
+        const span = document.createElement('span');
+        span.className = 'snowflake-item';
+        span.textContent = flakes[i % flakes.length];
+        const leftPct = (Math.random() * 100).toFixed(2);
+        const sizePx = (12 + Math.random() * 14).toFixed(0);
+        const durationSec = (7 + Math.random() * 9).toFixed(2);
+        const delaySec = (-Math.random() * 14).toFixed(2);
+        const opacity = (0.45 + Math.random() * 0.45).toFixed(2);
+        span.style.left = `${leftPct}%`;
+        span.style.fontSize = `${sizePx}px`;
+        span.style.animationDuration = `${durationSec}s`;
+        span.style.animationDelay = `${delaySec}s`;
+        span.style.opacity = opacity;
+        layer.appendChild(span);
+      }
+    }
+
+    function toggleSnowfall() {
+      snowEnabled = !snowEnabled;
+      const layer = document.getElementById('snowfall-layer');
+      const icon = document.getElementById('snow-icon');
+      if (layer) layer.classList.toggle('hidden', !snowEnabled);
+      if (icon) icon.className = snowEnabled ? 'fa-solid fa-snowflake' : 'fa-solid fa-snowflake text-zinc-500';
+      showToast(snowEnabled ? 'Fiocchi di neve attivati ❄️' : 'Fiocchi di neve nascosti', 'info');
+    }
+
+    /**
+     * PERSISTENZA PROFILO, PASSWORD & CO-ADMIN
+     */
+    function loadAdminSettings() {
       try {
-        const raw = localStorage.getItem(EMAILJS_STORAGE_KEY);
+        const raw = localStorage.getItem(ADMIN_SETTINGS_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (parsed && parsed.publicKey && parsed.serviceId && parsed.templateId) {
-            emailJsConfig = parsed;
+          if (parsed && typeof parsed === 'object') {
+            adminSettings = {
+              ...adminSettings,
+              ...parsed,
+              coAdmins: Array.isArray(parsed.coAdmins) ? parsed.coAdmins : []
+            };
           }
         }
       } catch {}
-
-      const pkEl = document.getElementById('ejs-public-key');
-      const sidEl = document.getElementById('ejs-service-id');
-      const tidEl = document.getElementById('ejs-template-id');
-      if (pkEl) pkEl.value = emailJsConfig.publicKey;
-      if (sidEl) sidEl.value = emailJsConfig.serviceId;
-      if (tidEl) tidEl.value = emailJsConfig.templateId;
     }
 
-    function initEmailJsSdk() {
+    function saveAdminSettings() {
       try {
-        if (typeof emailjs !== 'undefined' && emailJsConfig.publicKey) {
-          emailjs.init({ publicKey: emailJsConfig.publicKey });
-        }
-      } catch (err) {
-        console.error('Errore inizializzazione EmailJS:', err);
-      }
+        localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(adminSettings));
+      } catch {}
+      applyAdminProfileUI();
     }
 
-    function saveEmailJsConfig() {
-      const pk = document.getElementById('ejs-public-key').value.trim();
-      const sid = document.getElementById('ejs-service-id').value.trim();
-      const tid = document.getElementById('ejs-template-id').value.trim();
+    function applyAdminProfileUI() {
+      const iconClass = adminSettings.profileAvatar === 'fa-santa-hat' ? 'fa-sleigh' : (adminSettings.profileAvatar || 'fa-user-tie');
+      const headerName = document.getElementById('admin-header-name');
+      const headerRole = document.getElementById('admin-header-role');
+      const headerAvatar = document.getElementById('admin-header-avatar');
+      const loginSubtitle = document.getElementById('login-admin-subtitle');
 
-      if (!pk || !sid || !tid) {
-        showToast('Compila tutti e tre i campi EmailJS.', 'error');
+      if (headerName) headerName.textContent = adminSettings.profileName || 'Amministratore Mollo Noleggio';
+      if (headerRole) headerRole.textContent = adminSettings.profileRole || 'Organizzatore Secret Santa 2026';
+      if (headerAvatar) headerAvatar.innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
+      if (loginSubtitle) {
+        loginSubtitle.textContent = `Accesso gestito da ${adminSettings.profileName}. Inserisci la password per gestire il Secret Santa 2026.`;
+      }
+
+      const pName = document.getElementById('profile-admin-name');
+      const pRole = document.getElementById('profile-admin-role');
+      const pEmail = document.getElementById('profile-admin-email');
+      if (pName) pName.value = adminSettings.profileName || '';
+      if (pRole) pRole.value = adminSettings.profileRole || '';
+      if (pEmail) pEmail.value = adminSettings.profileEmail || '';
+
+      document.querySelectorAll('.avatar-opt').forEach(btn => {
+        const isSel = btn.getAttribute('data-avatar') === adminSettings.profileAvatar;
+        btn.className = isSel
+          ? 'avatar-opt w-10 h-10 rounded-xl border-2 border-red-600 bg-red-50 text-red-700 flex items-center justify-center cursor-pointer'
+          : 'avatar-opt w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center cursor-pointer';
+      });
+
+      renderCoAdminsList();
+    }
+
+    function selectAdminAvatar(avatarKey) {
+      adminSettings.profileAvatar = avatarKey;
+      applyAdminProfileUI();
+    }
+
+    function saveAdminProfileSettings() {
+      const name = document.getElementById('profile-admin-name').value.trim();
+      const role = document.getElementById('profile-admin-role').value.trim();
+      const email = document.getElementById('profile-admin-email').value.trim().toLowerCase();
+
+      if (!name) {
+        showToast('Inserisci un nome per il profilo Admin.', 'error');
+        return;
+      }
+      if (email) {
+        const val = validateMolloEmail(email);
+        if (!val.valid) {
+          showToast(val.msg, 'error');
+          return;
+        }
+        adminSettings.profileEmail = val.email;
+      } else {
+        adminSettings.profileEmail = '';
+      }
+
+      adminSettings.profileName = name;
+      adminSettings.profileRole = role || 'Organizzatore Secret Santa 2026';
+      saveAdminSettings();
+      showToast('Profilo Admin aggiornato!', 'success');
+    }
+
+    function handleChangeAdminPassword() {
+      const current = document.getElementById('pwd-current').value;
+      const nextPwd = document.getElementById('pwd-new').value;
+      const confirmPwd = document.getElementById('pwd-confirm').value;
+
+      if (current !== adminSettings.password) {
+        showToast('La password attuale non è corretta.', 'error');
+        return;
+      }
+      if (!nextPwd || nextPwd.length < 6) {
+        showToast('La nuova password deve avere almeno 6 caratteri.', 'error');
+        return;
+      }
+      if (nextPwd !== confirmPwd) {
+        showToast('Le due nuove password non coincidono.', 'error');
         return;
       }
 
-      emailJsConfig = { publicKey: pk, serviceId: sid, templateId: tid };
-      try {
-        localStorage.setItem(EMAILJS_STORAGE_KEY, JSON.stringify(emailJsConfig));
-      } catch {}
-      initEmailJsSdk();
-      showToast('Configurazione EmailJS aggiornata e salvata!', 'success');
+      adminSettings.password = nextPwd;
+      saveAdminSettings();
+      document.getElementById('pwd-current').value = '';
+      document.getElementById('pwd-new').value = '';
+      document.getElementById('pwd-confirm').value = '';
+      showToast('Password Admin aggiornata con successo!', 'success');
     }
 
-    function resetEmailJsConfig() {
-      emailJsConfig = { ...DEFAULT_EMAILJS_CONFIG };
-      try {
-        localStorage.removeItem(EMAILJS_STORAGE_KEY);
-      } catch {}
-      loadEmailJsConfig();
-      initEmailJsSdk();
-      showToast('Credenziali EmailJS predefinite ripristinate.', 'info');
+    function handleAddCoAdmin() {
+      const nameEl = document.getElementById('coadmin-name');
+      const emailEl = document.getElementById('coadmin-email');
+      const name = nameEl.value.trim();
+      const validation = validateMolloEmail(emailEl.value);
+
+      if (!name) {
+        showToast('Inserisci il nome del Co-Admin.', 'error');
+        return;
+      }
+      if (!validation.valid) {
+        showToast(validation.msg, 'error');
+        return;
+      }
+      if (adminSettings.coAdmins.some(a => a.email === validation.email) || adminSettings.profileEmail === validation.email) {
+        showToast('Questo indirizzo è già registrato come Admin.', 'error');
+        return;
+      }
+
+      adminSettings.coAdmins.push({
+        id: 'adm_' + Date.now(),
+        name,
+        email: validation.email
+      });
+      saveAdminSettings();
+      nameEl.value = '';
+      emailEl.value = '';
+      showToast(`${name} aggiunto come Co-Admin!`, 'success');
     }
 
-    /**
-     * CODIFICA E DECODIFICA URL-SAFE BASE64 (SUPPORTO UTF-8 COMPLETO)
-     */
-    function encodeParticipantPayload(payloadObj) {
-      const jsonStr = JSON.stringify(payloadObj);
-      const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
-      return base64
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
+    function removeCoAdmin(id) {
+      adminSettings.coAdmins = adminSettings.coAdmins.filter(a => a.id !== id);
+      saveAdminSettings();
+      showToast('Co-Admin rimosso.', 'info');
     }
 
-    function decodeParticipantPayload(base64UrlStr) {
+    async function sendCoAdminInviteEmail(coAdminId) {
+      const adm = adminSettings.coAdmins.find(a => a.id === coAdminId);
+      if (!adm) return;
+      if (typeof emailjs === 'undefined') {
+        showToast('Libreria EmailJS non caricata.', 'error');
+        return;
+      }
+      const adminUrl = window.location.origin + window.location.pathname;
+      const msg =
+        `Ciao ${adm.name},\n\n` +
+        `Sei stato abilitato come Co-Amministratore per il SECRET SANTA 2026 di Mollo Noleggio.\n\n` +
+        `Link Pannello Admin: ${adminUrl}\n` +
+        `Password di accesso: ${adminSettings.password}\n\n` +
+        `Team Mollo Noleggio`;
+
       try {
-        let base64 = base64UrlStr.replace(/-/g, '+').replace(/_/g, '/');
-        while (base64.length % 4) {
-          base64 += '=';
-        }
-        const jsonStr = decodeURIComponent(escape(atob(base64)));
-        return JSON.parse(jsonStr);
-      } catch (e) {
-        console.error('Errore decodifica payload:', e);
-        return null;
+        initEmailJsSdk();
+        await emailjs.send(emailJsConfig.serviceId, emailJsConfig.templateId, {
+          to_email: adm.email,
+          to_name: adm.name,
+          subject: 'SECRET SANTA 2026 - Accesso Admin',
+          assigned_name: 'Co-Amministratore',
+          message: msg
+        });
+        showToast(`Credenziali Admin inviate a ${adm.email}!`, 'success');
+      } catch (err) {
+        showToast('Errore nell\'invio email al Co-Admin.', 'error');
+      }
+    }
+
+    function renderCoAdminsList() {
+      const container = document.getElementById('coadmins-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      // Admin principale
+      const primaryCard = document.createElement('div');
+      primaryCard.className = 'p-3 rounded-xl bg-amber-50/70 border border-amber-200 flex items-center justify-between gap-2 text-xs';
+      primaryCard.innerHTML = `
+        <div>
+          <div class="font-bold text-slate-900">${escapeHtml(adminSettings.profileName)} <span class="text-[10px] font-bold text-amber-800 bg-amber-200/70 px-1.5 py-0.5 rounded ml-1">Principale</span></div>
+          <div class="font-mono text-slate-600">${escapeHtml(adminSettings.profileEmail || 'Nessuna email impostata')}</div>
+        </div>
+      `;
+      container.appendChild(primaryCard);
+
+      adminSettings.coAdmins.forEach(adm => {
+        const row = document.createElement('div');
+        row.className = 'p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs';
+        row.innerHTML = `
+          <div>
+            <div class="font-bold text-slate-900">${escapeHtml(adm.name)}</div>
+            <div class="font-mono text-slate-500">${escapeHtml(adm.email)}</div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="sendCoAdminInviteEmail('${adm.id}')" title="Invia credenziali via EmailJS" class="px-2.5 py-1.5 rounded-lg bg-green-800 hover:bg-green-900 text-white font-semibold cursor-pointer">
+              <i class="fa-solid fa-paper-plane mr-1"></i>Invia Accesso
+            </button>
+            <button type="button" onclick="removeCoAdmin('${adm.id}')" title="Rimuovi" class="p-1.5 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 cursor-pointer">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function switchAdminSubTab(tab) {
+      const groupView = document.getElementById('admin-subview-group');
+      const settingsView = document.getElementById('admin-subview-settings');
+      const tabGroup = document.getElementById('tab-admin-group');
+      const tabSettings = document.getElementById('tab-admin-settings');
+
+      if (tab === 'settings') {
+        groupView.classList.add('hidden');
+        settingsView.classList.remove('hidden');
+        tabSettings.className = 'px-3.5 py-2 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition flex items-center gap-1.5 cursor-pointer';
+        tabGroup.className = 'px-3.5 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5 cursor-pointer';
+        applyAdminProfileUI();
+      } else {
+        settingsView.classList.add('hidden');
+        groupView.classList.remove('hidden');
+        tabGroup.className = 'px-3.5 py-2 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition flex items-center gap-1.5 cursor-pointer';
+        tabSettings.className = 'px-3.5 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5 cursor-pointer';
       }
     }
 
     /**
-     * AUTENTICAZIONE ADMIN
+     * AUTENTICAZIONE ADMIN E PASSWORD DIMENTICATA
      */
     function isAdminAuthenticated() {
       try {
@@ -753,14 +1210,21 @@
       }
     }
 
-    function requestAdminAccess() {
+    function requestAdminAccess(fromUserClick = false) {
       if (isAdminAuthenticated()) {
+        // Sblocca sempre il ritorno al pannello Admin anche se il selettore simulatore era su un utente
+        const simSelect = document.getElementById('preview-user-select');
+        if (simSelect) simSelect.value = '';
         showAdminDashboard();
+        if (fromUserClick) {
+          switchAdminSubTab('group');
+        }
       } else {
         document.getElementById('user-view').classList.add('hidden');
         document.getElementById('admin-view').classList.add('hidden');
         document.getElementById('admin-login-view').classList.remove('hidden');
         document.getElementById('admin-login-error').classList.add('hidden');
+        closeForgotPasswordBox();
         const pwdInput = document.getElementById('admin-password-input');
         pwdInput.value = '';
         setTimeout(() => pwdInput.focus(), 50);
@@ -771,7 +1235,7 @@
       const pwdInput = document.getElementById('admin-password-input');
       const errorBox = document.getElementById('admin-login-error');
 
-      if (pwdInput.value === ADMIN_PASSWORD) {
+      if (pwdInput.value === adminSettings.password) {
         try {
           sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
         } catch {}
@@ -785,6 +1249,103 @@
         pwdInput.select();
         showToast('Password amministratore errata.', 'error');
       }
+    }
+
+    function openForgotPasswordBox() {
+      document.getElementById('admin-login-form-box').classList.add('hidden');
+      document.getElementById('admin-forgot-box').classList.remove('hidden');
+      document.getElementById('reset-code-verify-step').classList.add('hidden');
+      const emailField = document.getElementById('forgot-admin-email');
+      if (emailField && adminSettings.profileEmail) {
+        emailField.value = adminSettings.profileEmail;
+      }
+    }
+
+    function closeForgotPasswordBox() {
+      document.getElementById('admin-forgot-box').classList.add('hidden');
+      document.getElementById('admin-login-form-box').classList.remove('hidden');
+    }
+
+    async function sendAdminResetCode() {
+      const emailInput = document.getElementById('forgot-admin-email').value.trim().toLowerCase();
+      const validation = validateMolloEmail(emailInput);
+      if (!validation.valid) {
+        showToast(validation.msg, 'error');
+        return;
+      }
+
+      const allowedEmails = [
+        (adminSettings.profileEmail || '').toLowerCase(),
+        ...adminSettings.coAdmins.map(a => a.email.toLowerCase())
+      ].filter(Boolean);
+
+      if (allowedEmails.length > 0 && !allowedEmails.includes(validation.email)) {
+        showToast('Questa email non risulta tra gli amministratori abilitati.', 'error');
+        return;
+      }
+
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      pendingPasswordResetCode = code;
+      pendingPasswordResetEmail = validation.email;
+
+      const btn = document.getElementById('btn-send-reset-code');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Invio codice...</span>';
+
+      try {
+        initEmailJsSdk();
+        await emailjs.send(emailJsConfig.serviceId, emailJsConfig.templateId, {
+          to_email: validation.email,
+          to_name: adminSettings.profileName,
+          subject: 'SECRET SANTA 2026 - Codice Reset Password',
+          assigned_name: code,
+          message: `Ciao,\n\nIl tuo codice temporaneo per reimpostare la password Admin di SECRET SANTA 2026 è: ${code}\n\nInseriscilo nella schermata di recupero per impostare la nuova password.`
+        });
+        document.getElementById('reset-code-verify-step').classList.remove('hidden');
+        showToast(`Codice di reset inviato a ${validation.email}!`, 'success');
+      } catch (err) {
+        showToast('Impossibile inviare il codice via EmailJS. Puoi usare il ripristino alla password predefinita qui sotto.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane text-amber-300"></i><span>Invia Codice di Reset via Email</span>';
+      }
+    }
+
+    function confirmAdminPasswordReset() {
+      const enteredCode = document.getElementById('reset-code-input').value.trim();
+      const newPwd = document.getElementById('reset-new-password').value;
+
+      if (!pendingPasswordResetCode || enteredCode !== pendingPasswordResetCode) {
+        showToast('Codice di verifica non valido.', 'error');
+        return;
+      }
+      if (!newPwd || newPwd.length < 6) {
+        showToast('La nuova password deve contenere almeno 6 caratteri.', 'error');
+        return;
+      }
+
+      adminSettings.password = newPwd;
+      saveAdminSettings();
+      pendingPasswordResetCode = null;
+      try {
+        sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+      } catch {}
+      updateAdminHeaderControls();
+      showAdminDashboard();
+      showToast('Nuova password salvata! Accesso effettuato.', 'success');
+    }
+
+    function resetAdminToDefaultPassword() {
+      openConfirmModal(
+        'Ripristinare la password iniziale?',
+        'La password amministratore verrà riportata al valore predefinito iniziale (TuccaN3n!). Confermi?',
+        () => {
+          adminSettings.password = DEFAULT_ADMIN_PASSWORD;
+          saveAdminSettings();
+          closeForgotPasswordBox();
+          showToast('Password ripristinata a TuccaN3n!', 'success');
+        }
+      );
     }
 
     function toggleAdminPasswordVisibility() {
@@ -1018,13 +1579,59 @@
     }
 
     /**
-     * ALGORITMO ESTRAZIONE SEGRETA (CICLO SINGOLO HAMILTONIANO GARANTITO)
-     * Garantisce che:
-     * 1. Nessuno estragga sé stesso
-     * 2. Tutti diano esattamente 1 regalo
-     * 3. Tutti ricevano esattamente 1 regalo
-     * 4. Non ci siano sottocicli chiusi da 2 persone
+     * ALGORITMO ESTRAZIONE SEGRETA A DERANGEMENT PURA (MASSIMA CASUALITÀ)
+     * Utilizza entropia crittografica (crypto.getRandomValues) e algoritmo
+     * di Sattolo / Derangement uniforme senza punti fissi:
+     * 1. Nessuno può mai pescare sé stesso (derangement[i] !== i)
+     * 2. Tutti danno esattamente 1 regalo e tutti ricevono esattamente 1 regalo
+     * 3. Tutte le permutazioni valide senza punti fissi sono possibili (massima casualità)
      */
+    function secureRandomInt(maxExclusive) {
+      if (window.crypto && window.crypto.getRandomValues) {
+        const array = new Uint32Array(1);
+        const limit = Math.floor(0x100000000 / maxExclusive) * maxExclusive;
+        let val;
+        do {
+          window.crypto.getRandomValues(array);
+          val = array[0];
+        } while (val >= limit);
+        return val % maxExclusive;
+      }
+      return Math.floor(Math.random() * maxExclusive);
+    }
+
+    function generateUniformDerangement(n) {
+      // Genera una permutazione casuale uniforme finché non ha zero punti fissi
+      // La probabilità di successo al primo tentativo è ~1/e (36.8%), quindi converge in 1-3 iterazioni
+      let perm = Array.from({ length: n }, (_, i) => i);
+      let valid = false;
+      let guard = 0;
+
+      while (!valid && guard < 500) {
+        guard++;
+        perm = Array.from({ length: n }, (_, i) => i);
+        for (let i = n - 1; i > 0; i--) {
+          const j = secureRandomInt(i + 1);
+          [perm[i], perm[j]] = [perm[j], perm[i]];
+        }
+        valid = true;
+        for (let i = 0; i < n; i++) {
+          if (perm[i] === i) {
+            valid = false;
+            break;
+          }
+        }
+      }
+
+      // Fallback deterministico garantito in caso estremo
+      if (!valid) {
+        for (let i = 0; i < n; i++) {
+          perm[i] = (i + 1) % n;
+        }
+      }
+      return perm;
+    }
+
     function executeSecretDraw() {
       const n = state.participants.length;
       if (n < 3) {
@@ -1033,25 +1640,19 @@
       }
 
       const runDraw = () => {
-        // Mescolamento Fisher-Yates degli indici
-        const indices = Array.from({ length: n }, (_, i) => i);
-        for (let i = n - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [indices[i], indices[j]] = [indices[j], indices[i]];
-        }
+        const receiverMap = generateUniformDerangement(n);
 
-        // Ciclo chiuso: indices[k] regala a indices[(k + 1) % n]
-        for (let k = 0; k < n; k++) {
-          const giverIdx = indices[k];
-          const receiverIdx = indices[(k + 1) % n];
+        for (let giverIdx = 0; giverIdx < n; giverIdx++) {
+          const receiverIdx = receiverMap[giverIdx];
           state.participants[giverIdx].targetId = state.participants[receiverIdx].id;
           state.participants[giverIdx].hasSpun = false;
+          state.participants[giverIdx].inviteSent = false;
         }
 
         state.drawCompleted = true;
         saveAdminState();
         renderAdminDashboard();
-        showToast(`Estrazione completata con successo per ${n} partecipanti!`, 'success');
+        showToast(`Nuova estrazione casuale completata per ${n} partecipanti!`, 'success');
       };
 
       if (state.drawCompleted) {
@@ -1879,6 +2480,87 @@
         showToast('Impossibile copiare automaticamente.', 'error');
       }
       document.body.removeChild(textarea);
+    }
+
+    /**
+     * CONFIGURAZIONE EMAILJS v4 & CODIFICA URL SAFE UTF-8
+     */
+    function loadEmailJsConfig() {
+      try {
+        const raw = localStorage.getItem(EMAILJS_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.publicKey && parsed.serviceId && parsed.templateId) {
+            emailJsConfig = { ...parsed };
+          }
+        }
+      } catch {}
+      const pkEl = document.getElementById('ejs-public-key');
+      const sidEl = document.getElementById('ejs-service-id');
+      const tidEl = document.getElementById('ejs-template-id');
+      if (pkEl) pkEl.value = emailJsConfig.publicKey;
+      if (sidEl) sidEl.value = emailJsConfig.serviceId;
+      if (tidEl) tidEl.value = emailJsConfig.templateId;
+    }
+
+    function initEmailJsSdk() {
+      if (typeof emailjs !== 'undefined' && emailJsConfig.publicKey) {
+        try {
+          emailjs.init({ publicKey: emailJsConfig.publicKey });
+        } catch {}
+      }
+    }
+
+    function saveEmailJsConfig() {
+      const pk = document.getElementById('ejs-public-key').value.trim();
+      const sid = document.getElementById('ejs-service-id').value.trim();
+      const tid = document.getElementById('ejs-template-id').value.trim();
+      if (!pk || !sid || !tid) {
+        showToast('Compila tutti e 3 i campi EmailJS.', 'error');
+        return;
+      }
+      emailJsConfig = { publicKey: pk, serviceId: sid, templateId: tid };
+      try {
+        localStorage.setItem(EMAILJS_STORAGE_KEY, JSON.stringify(emailJsConfig));
+      } catch {}
+      initEmailJsSdk();
+      showToast('Configurazione EmailJS salvata!', 'success');
+    }
+
+    function resetEmailJsConfig() {
+      emailJsConfig = { ...DEFAULT_EMAILJS_CONFIG };
+      try {
+        localStorage.removeItem(EMAILJS_STORAGE_KEY);
+      } catch {}
+      loadEmailJsConfig();
+      initEmailJsSdk();
+      showToast('Credenziali EmailJS ripristinate ai valori predefiniti.', 'info');
+    }
+
+    function encodeParticipantPayload(obj) {
+      const jsonStr = JSON.stringify(obj);
+      const bytes = new TextEncoder().encode(jsonStr);
+      let binStr = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binStr += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binStr).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function decodeParticipantPayload(token) {
+      try {
+        let base64 = token.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4) base64 += '=';
+        const binStr = atob(base64);
+        const bytes = new Uint8Array(binStr.length);
+        for (let i = 0; i < binStr.length; i++) {
+          bytes[i] = binStr.charCodeAt(i);
+        }
+        const jsonStr = new TextDecoder().decode(bytes);
+        return JSON.parse(jsonStr);
+      } catch {
+        return null;
+      }
     }
 
     function showToast(message, type = 'info') {
