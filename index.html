@@ -348,18 +348,37 @@
             </div>
 
             <!-- Box Ironico Suggerimenti Regali -->
-            <div class="bg-amber-50/90 border border-amber-300 rounded-xl p-4 text-center space-y-2.5">
+            <div class="bg-amber-50/90 border border-amber-300 rounded-xl p-4 text-center space-y-3">
               <p class="text-xs sm:text-sm text-amber-950 italic font-medium">
                 <i class="fa-solid fa-face-grin-wink text-amber-600 mr-1.5"></i>
                 "Bruttino da parte tua fartelo suggerire, ma se sei in crisi posso darti una mano senza dirlo a nessuno."
               </p>
-              <a href="https://www.amazon.it/s?k=regali+buffi+secret+santa&adgrpid=201820787687&hvadid=822627229847&hvdev=c&hvexpln=0&hvlocphy=9202866&hvnetw=g&hvocijid=16968412586809109831--&hvqmt=b&hvrand=16968412586809109831&hvtargid=kwd-2651760728112&hydadcr=29060_2614860_360618&mcid=b50c27c1654d3d5f91204883cfe9f342&tag=slhyin-21&ref=pd_sl_6iyqglp30a_b"
-                 target="_blank" rel="noopener noreferrer"
-                 class="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-amber-500 hover:bg-amber-600 text-zinc-950 font-extrabold text-xs sm:text-sm shadow-sm transition cursor-pointer">
-                <i class="fa-solid fa-lightbulb"></i>
-                <span>Suggerimenti Regali</span>
-                <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-75"></i>
-              </a>
+
+              <!-- Riquadro Idea Regalo Estratta (nascosto finché non clicca) -->
+              <div id="gift-idea-box" class="hidden bg-white border border-amber-300 rounded-xl p-3.5 text-left shadow-xs space-y-1.5 transition-all">
+                <div class="flex items-center justify-between gap-2">
+                  <span id="gift-idea-category" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900">
+                    Idea Regalo
+                  </span>
+                  <span id="gift-idea-price" class="text-xs font-extrabold text-green-800 bg-green-100 px-2 py-0.5 rounded-full">
+                    ~ €10 - €15
+                  </span>
+                </div>
+                <h4 id="gift-idea-title" class="text-sm sm:text-base font-extrabold text-slate-900">
+                  ---
+                </h4>
+                <p id="gift-idea-desc" class="text-xs text-slate-600 leading-relaxed">
+                  ---
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-center justify-center gap-2">
+                <button type="button" id="btn-gift-idea" onclick="showRandomGiftIdea()"
+                  class="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-amber-500 hover:bg-amber-600 text-zinc-950 font-extrabold text-xs sm:text-sm shadow-sm transition cursor-pointer">
+                  <i class="fa-solid fa-wand-sparkles"></i>
+                  <span id="btn-gift-idea-label">Suggerimenti Regali (Max €15)</span>
+                </button>
+              </div>
             </div>
 
             <!-- Stato Invio Automatico EmailJS -->
@@ -852,6 +871,48 @@
     let emailJsConfig = { ...DEFAULT_EMAILJS_CONFIG };
 
     const OFFICIAL_INSTRUCTIONS = "Questo è il tuo nominativo per il secret santa, tienilo segreto. Hai un limite massimo di €15 per fare il regalo alla persona estratta. Il giorno della cena aziendale, tutti i regali verranno riposti in un angolo e ognuno si alzerà per prendere il suo. A quel punto, puoi rivelare il tuo nome oppure rimanere anonimo per sempre!";
+
+    const GIFT_IDEAS_UNDER_15 = [
+      { category: "Ufficio & Scrivania", price: "~ €12", title: "Scaldatazza USB da scrivania", desc: "Perfetto per chi lascia sempre raffreddare il caffè o la tisana tra una chiamata e l'altra." },
+      { category: "Divertente", price: "~ €10", title: "Calzini natalizi o a tema cibo/birra", desc: "Un grande classico del Secret Santa, ma con fantasie assurde (pizza, sushi o renne) fa sempre ridere." },
+      { category: "Goloso", price: "~ €14", title: "Box degustazione cioccolatini artigianali o crema spalmabile", desc: "Con il cioccolato di qualità o una crema al pistacchio non si sbaglia mai." },
+      { category: "Ufficio & Relax", price: "~ €11", title: "Pallina antistress o mini-canestro da cestino", desc: "Per scaricare la tensione delle giornate più intense direttamente dalla sedia dell'ufficio." },
+      { category: "Casa & Inverno", price: "~ €13", title: "Plaid morbido in pile natalizio", desc: "Caldo, utile per le serate sul divano e sempre apprezzato da tutti." },
+      { category: "Divertente", price: "~ €12", title: "Tazza termica che cambia disegno col calore", desc: "Da nera a super colorata appena si versa una bevanda calda." },
+      { category: "Giochi & Serate", price: "~ €14", title: "Gioco di carte tascabile (es. UNO, Exploding Kittens o Dobble)", desc: "Ideale per animare le serate delle feste con amici e parenti." },
+      { category: "Ufficio & Tech", price: "~ €13", title: "Luce LED flessibile da lettura / laptop", desc: "Comoda per lavorare la sera o leggere a letto senza disturbare." },
+      { category: "Goloso", price: "~ €12", title: "Set degustazione tè e infusi invernali", desc: "Scatola elegante con bustine aromatizzate a cannella, arancia e zenzero." },
+      { category: "Casa & Atmosfera", price: "~ €14", title: "Candela profumata in vasetto di vetro", desc: "Profumazioni calde come vaniglia, legno di cedro o biscotti appena sfornati." },
+      { category: "Divertente", price: "~ €10", title: "Blocchetto 'Note Passivo-Aggressive' per colleghi", desc: "Foglietti con caselle da spuntare tipo 'Come da mia precedente email...'." },
+      { category: "Pratico", price: "~ €15", title: "Borraccia termica in acciaio inox", desc: "Mantiene caldo il tè o fredda l'acqua per tutto il turno di lavoro." },
+      { category: "Cura & Relax", price: "~ €12", title: "Set bomba da bagno / doccia aromaterapica", desc: "Un piccolo momento spa casalingo a prova di budget." },
+      { category: "Ufficio & Verde", price: "~ €11", title: "Piantina grassa in vasetto simpatico", desc: "Richiede pochissima acqua e rallegra subito qualsiasi scrivania." },
+      { category: "Cucina & Aperitivo", price: "~ €14", title: "Set sottobicchieri originali (vinili o legno inciso)", desc: "Utili a casa o in ufficio e facili da impacchettare." },
+      { category: "Goloso", price: "~ €13", title: "Panettone/Pandoro artigianale mignon + mini spumante", desc: "Il kit perfetto delle feste in formato mini sotto i 15 euro." },
+      { category: "Viaggio & Auto", price: "~ €12", title: "Organizer da zaino/valigia per cavi e caricabatterie", desc: "Addio cavi annodati in borsa o nel borsone." },
+      { category: "Divertente", price: "~ €14", title: "Mini aspirapolvere da tastiera USB", desc: "Indispensabile per chi fa merenda sopra la tastiera del PC." },
+      { category: "Cultura & Svago", price: "~ €13", title: "Libro tascabile bestseller o raccolta di enigmi/quiz", desc: "Un passatempo intelligente per le vacanze di Natale." },
+      { category: "Cura & Inverno", price: "~ €11", title: "Kit crema mani e balsamo labbra invernale", desc: "Un salvavita contro il freddo di dicembre e gennaio." }
+    ];
+
+    let lastGiftIdeaIndex = -1;
+
+    function showRandomGiftIdea() {
+      if (!GIFT_IDEAS_UNDER_15.length) return;
+      let idx = secureRandomInt(GIFT_IDEAS_UNDER_15.length);
+      if (idx === lastGiftIdeaIndex && GIFT_IDEAS_UNDER_15.length > 1) {
+        idx = (idx + 1) % GIFT_IDEAS_UNDER_15.length;
+      }
+      lastGiftIdeaIndex = idx;
+
+      const idea = GIFT_IDEAS_UNDER_15[idx];
+      document.getElementById('gift-idea-category').textContent = idea.category;
+      document.getElementById('gift-idea-price').textContent = idea.price;
+      document.getElementById('gift-idea-title').textContent = idea.title;
+      document.getElementById('gift-idea-desc').textContent = idea.desc;
+      document.getElementById('gift-idea-box').classList.remove('hidden');
+      document.getElementById('btn-gift-idea-label').textContent = 'Dammi un\'altra idea (Max €15)';
+    }
 
     const WHEEL_COLORS = [
       '#B91C1C', '#14532D', '#D97706', '#1E293B',
