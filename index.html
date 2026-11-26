@@ -249,7 +249,7 @@
           </div>
 
           <p class="text-xs text-slate-600 leading-relaxed">
-            Inserisci l'email aziendale di un amministratore abilitato (<code class="bg-white px-1 py-0.5 rounded border border-slate-200">@mollonoleggio.com</code>) per ricevere un <strong>codice di verifica</strong> via EmailJS, oppure ripristina la password iniziale.
+            Inserisci l'email aziendale di un amministratore abilitato per ricevere un <strong>codice di verifica</strong> via EmailJS, oppure ripristina la password iniziale.
           </p>
 
           <div>
@@ -307,6 +307,14 @@
 
         <!-- Area Ruota -->
         <div class="p-6 sm:p-8 flex flex-col items-center text-center">
+          <!-- Barra Test Admin (Visibile solo durante simulazione da Admin) -->
+          <div id="admin-test-reset-bar" class="hidden w-full mb-5 p-3 rounded-xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-950">
+            <span class="font-semibold"><i class="fa-solid fa-flask text-amber-700 mr-1.5"></i> Modalità Test Admin attiva</span>
+            <button type="button" onclick="resetCurrentSimulatedSpin()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold transition cursor-pointer">
+              <i class="fa-solid fa-rotate-left mr-1"></i> Riprova Spin Test
+            </button>
+          </div>
+
           <p id="wheel-instruction-top" class="text-sm sm:text-base text-slate-600 max-w-md mb-6">
             Premi il pulsante qui sotto per far girare la ruota e scoprire chi sarà il destinatario segreto del tuo regalo!
           </p>
@@ -503,7 +511,7 @@
                 <i class="fa-solid fa-user-plus text-red-700"></i> Aggiungi Collega
               </h3>
               <p class="text-xs text-slate-500 mt-1">
-                Sono ammesse esclusivamente email <code class="bg-slate-100 px-1.5 py-0.5 rounded text-red-700 font-bold">@mollonoleggio.com</code>.
+                Inserisci nome, cognome e indirizzo email aziendale (es. <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">@mollonoleggio.com</code>, <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">@mollofratelli.com</code>).
               </p>
             </div>
 
@@ -516,7 +524,7 @@
               </div>
 
               <div>
-                <label for="input-email" class="block text-xs font-bold text-slate-700 mb-1">Email Aziendale (@mollonoleggio.com)</label>
+                <label for="input-email" class="block text-xs font-bold text-slate-700 mb-1">Email Aziendale</label>
                 <input type="email" id="input-email" placeholder="m.rossi@mollonoleggio.com"
                   onkeydown="if(event.key === 'Enter'){ event.preventDefault(); handleAddParticipant(); }"
                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 text-sm font-mono outline-none" />
@@ -805,7 +813,7 @@
                 <i class="fa-solid fa-user-shield text-green-700"></i> Aggiungi un Co-Admin
               </h3>
               <p class="text-xs text-slate-500 mt-1">
-                Abilita altri colleghi <code class="bg-slate-100 px-1 py-0.5 rounded text-red-700 font-bold">@mollonoleggio.com</code> a gestire il pannello Admin e a ricevere il codice di reset password.
+                Abilita altri colleghi a gestire il pannello Admin e a ricevere il codice di reset password.
               </p>
             </div>
 
@@ -816,7 +824,7 @@
                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 text-sm outline-none" />
               </div>
               <div>
-                <label for="coadmin-email" class="block text-xs font-bold text-slate-700 mb-1">Email Aziendale (@mollonoleggio.com)</label>
+                <label for="coadmin-email" class="block text-xs font-bold text-slate-700 mb-1">Email Aziendale</label>
                 <input type="email" id="coadmin-email" placeholder="m.bianchi@mollonoleggio.com"
                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-600 text-sm font-mono outline-none" />
               </div>
@@ -843,7 +851,7 @@
 
   <!-- Footer -->
   <footer class="bg-white border-t border-slate-200 py-5 px-4 mt-12 text-center text-xs text-slate-500">
-    <p><strong>SECRET SANTA 2026</strong> • Riservato ai dipendenti <strong>Mollo Noleggio</strong> (@mollonoleggio.com)</p>
+    <p><strong>SECRET SANTA 2026</strong> • Riservato ai dipendenti <strong>Mollo Noleggio & Mollo Fratelli</strong></p>
   </footer>
 
   <!-- ========================================== -->
@@ -853,7 +861,6 @@
     /**
      * COSTANTI E STATO GLOBALE
      */
-    const ALLOWED_DOMAIN = '@mollonoleggio.com';
     const STORAGE_KEY = 'mollo_secret_santa_2026_state_v2';
     const SPUN_PREFIX = 'mollo_ss2026_spun_';
     const EMAIL_SENT_PREFIX = 'mollo_ss2026_emailsent_';
@@ -942,6 +949,7 @@
     let activeTokenKey = null;
     let currentWheelAngle = 0;
     let isSpinning = false;
+    let isSimulationMode = false;
     let soundEnabled = true;
 
     /**
@@ -1503,13 +1511,10 @@
      */
     function validateMolloEmail(email) {
       const clean = email.trim().toLowerCase();
-      if (!clean) return { valid: false, msg: 'Inserisci un indirizzo email aziendale.' };
-      if (!clean.endsWith(ALLOWED_DOMAIN)) {
-        return { valid: false, msg: `Dominio non consentito: sono ammesse solo email ${ALLOWED_DOMAIN}.` };
-      }
-      const localPart = clean.slice(0, -ALLOWED_DOMAIN.length);
-      if (!localPart || !/^[a-z0-9._-]+$/.test(localPart)) {
-        return { valid: false, msg: 'Formato email aziendale non valido.' };
+      if (!clean) return { valid: false, msg: 'Inserisci un indirizzo email.' };
+      const emailRegex = /^[a-z0-9._-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+      if (!emailRegex.test(clean)) {
+        return { valid: false, msg: 'Formato indirizzo email non valido.' };
       }
       return { valid: true, email: clean };
     }
@@ -1644,7 +1649,7 @@
         document.getElementById('bulk-import-box').classList.add('hidden');
         showToast(`Importati ${addedCount} colleghi${skippedCount > 0 ? ` (${skippedCount} scartati per dominio non valido o duplicato)` : ''}.`, 'success');
       } else {
-        showToast('Nessuna email @mollonoleggio.com valida trovata.', 'error');
+        showToast('Nessuna email valida trovata.', 'error');
       }
     }
 
@@ -2009,7 +2014,7 @@
           <tr>
             <td colspan="3" class="py-10 px-4 text-center text-slate-400 text-sm">
               <i class="fa-solid fa-users-slash text-2xl mb-2 block text-slate-300"></i>
-              Nessun partecipante inserito. Aggiungi i colleghi <strong>@mollonoleggio.com</strong> qui a sinistra.
+              Nessun partecipante inserito. Aggiungi i colleghi qui a sinistra.
             </td>
           </tr>
         `;
@@ -2349,15 +2354,16 @@
         ctx.textAlign = 'right';
         ctx.fillStyle = '#FFFFFF';
 
-        const fontSize = numSlices > 12 ? 11 : numSlices > 8 ? 13 : 15;
+        const fontSize = numSlices > 20 ? 10 : numSlices > 12 ? 11 : numSlices > 8 ? 13 : 15;
         ctx.font = `700 ${fontSize}px Inter, sans-serif`;
         ctx.shadowColor = 'rgba(0,0,0,0.45)';
         ctx.shadowBlur = 4;
 
         let label = slices[i];
-        if (label.length > 18) label = label.substring(0, 16) + '…';
+        const maxLen = numSlices > 20 ? 15 : 18;
+        if (label.length > maxLen) label = label.substring(0, maxLen - 2) + '…';
 
-        ctx.fillText(label, radius - 18, fontSize / 3);
+        ctx.fillText(label, radius - 16, fontSize / 3);
         ctx.restore();
       }
 
